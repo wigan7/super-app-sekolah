@@ -15,8 +15,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus, Loader2 } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast"; // Assuming shadcn toast exists or can just use standard alert if it doesn't.
-// Wait, I don't know if useToast is installed, let's just use window.alert or native fetch states
 
 export default function PendaftaranSheet({ onSuccess }: { onSuccess?: () => void }) {
   const [open, setOpen] = useState(false);
