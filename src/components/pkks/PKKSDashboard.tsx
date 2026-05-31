@@ -150,7 +150,7 @@ export default function PKKSDashboard() {
 
       {/* Main Content: Accordions */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-        <Accordion type="multiple" className="w-full">
+        <Accordion className="w-full">
           {pkksData.map((component, idx) => (
             <AccordionItem 
               value={component.id} 

@@ -1,0 +1,11 @@
+{
+  "/_not-found/page": "/_not-found",
+  "/_global-error/page": "/_global-error",
+  "/api/kesiswaan/route": "/api/kesiswaan",
+  "/favicon.ico/route": "/favicon.ico",
+  "/kepegawaian/page": "/kepegawaian",
+  "/page": "/",
+  "/pkks/page": "/pkks",
+  "/kesiswaan/page": "/kesiswaan",
+  "/pembelajaran/page": "/pembelajaran"
+}

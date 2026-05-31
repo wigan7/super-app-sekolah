@@ -53,7 +53,7 @@ export function KehadiranPiketTab() {
             <CardDescription>Pencatatan guru/pegawai yang izin keluar saat jam kerja.</CardDescription>
           </div>
           <Dialog open={isOpen} onOpenChange={setIsOpen}>
-            <DialogTrigger asChild>
+            <DialogTrigger>
               <Button size="sm" className="bg-slate-900 text-white hover:bg-slate-800 transition-colors">
                 <Plus className="w-4 h-4 mr-1" />
                 Tambah Izin

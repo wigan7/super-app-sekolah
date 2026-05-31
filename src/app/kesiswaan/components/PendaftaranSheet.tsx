@@ -64,11 +64,9 @@ export default function PendaftaranSheet({ onSuccess }: { onSuccess?: () => void
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger asChild>
-        <Button className="bg-blue-600 hover:bg-blue-700 text-white">
-          <Plus className="mr-2 h-4 w-4" />
-          Pendaftaran Siswa Baru
-        </Button>
+      <SheetTrigger render={<Button className="bg-blue-600 hover:bg-blue-700 text-white" />}>
+        <Plus className="mr-2 h-4 w-4" />
+        Pendaftaran Siswa Baru
       </SheetTrigger>
       <SheetContent className="w-full sm:max-w-xl md:max-w-2xl overflow-y-hidden flex flex-col p-0">
         <SheetHeader className="p-6 pb-2 border-b">

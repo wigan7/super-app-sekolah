@@ -1,32 +1,9 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { motion, Variants } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, UserCog, FileCheck } from "lucide-react";
-
-const summaryData = [
-  {
-    title: "Total Siswa",
-    value: "80",
-    icon: Users,
-    color: "text-blue-600",
-    bg: "bg-blue-100",
-  },
-  {
-    title: "Total Guru",
-    value: "10",
-    icon: UserCog,
-    color: "text-emerald-600",
-    bg: "bg-emerald-100",
-  },
-  {
-    title: "Progress PKKS",
-    value: "75%",
-    icon: FileCheck,
-    color: "text-purple-600",
-    bg: "bg-purple-100",
-  },
-];
 
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
@@ -52,6 +29,56 @@ const itemVariants: Variants = {
 };
 
 export default function Dashboard() {
+  const [dashboardData, setDashboardData] = useState({
+    totalSiswa: "0",
+    totalGuru: "0",
+    pkksProgress: "0%",
+  });
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        const response = await fetch('/api/dashboard');
+        if (response.ok) {
+          const data = await response.json();
+          setDashboardData({
+            totalSiswa: data.totalSiswa.toString(),
+            totalGuru: data.totalGuru.toString(),
+            pkksProgress: data.pkksProgress,
+          });
+        }
+      } catch (error) {
+        console.error("Failed to fetch dashboard data:", error);
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
+
+  const summaryData = [
+    {
+      title: "Total Siswa",
+      value: dashboardData.totalSiswa,
+      icon: Users,
+      color: "text-blue-600",
+      bg: "bg-blue-100",
+    },
+    {
+      title: "Total Guru",
+      value: dashboardData.totalGuru,
+      icon: UserCog,
+      color: "text-emerald-600",
+      bg: "bg-emerald-100",
+    },
+    {
+      title: "Progress PKKS",
+      value: dashboardData.pkksProgress,
+      icon: FileCheck,
+      color: "text-purple-600",
+      bg: "bg-purple-100",
+    },
+  ];
+
   return (
     <div className="flex-1 p-8">
       <div className="max-w-6xl mx-auto space-y-8">

@@ -79,7 +79,7 @@ export default function TabSupervisi() {
     >
       <div className="flex justify-end">
         <Sheet>
-          <SheetTrigger asChild>
+          <SheetTrigger>
             <Button className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm">
               <Plus className="mr-2 h-4 w-4" /> Input Supervisi Baru
             </Button>
@@ -135,9 +135,9 @@ export default function TabSupervisi() {
                   <TableHead className="font-medium text-slate-500 text-right">Status</TableHead>
                 </TableRow>
               </TableHeader>
-              <TableBody as={motion.tbody} variants={containerVariants} initial="hidden" animate="show">
+              <TableBody>
                 {mockSupervisi.map((row) => (
-                  <TableRow as={motion.tr} variants={itemVariants} key={row.id} className="border-b border-slate-50 dark:border-slate-800 hover:bg-slate-50/80 transition-colors">
+                  <TableRow key={row.id} className="border-b border-slate-50 dark:border-slate-800 hover:bg-slate-50/80 transition-colors">
                     <TableCell className="py-4 text-slate-600 dark:text-slate-300">{row.tanggal}</TableCell>
                     <TableCell className="py-4 font-medium text-slate-900 dark:text-slate-100">{row.guru}</TableCell>
                     <TableCell className="py-4 text-slate-600 dark:text-slate-300">{row.kelas}</TableCell>
@@ -181,9 +181,9 @@ export default function TabSupervisi() {
                   <TableHead className="font-medium text-slate-500 text-right">Hasil Pemeriksaan</TableHead>
                 </TableRow>
               </TableHeader>
-              <TableBody as={motion.tbody} variants={containerVariants} initial="hidden" animate="show">
+              <TableBody>
                 {mockAdministrasi.map((row) => (
-                  <TableRow as={motion.tr} variants={itemVariants} key={row.id} className="border-b border-slate-50 dark:border-slate-800 hover:bg-slate-50/80 transition-colors">
+                  <TableRow key={row.id} className="border-b border-slate-50 dark:border-slate-800 hover:bg-slate-50/80 transition-colors">
                     <TableCell className="py-4 font-medium text-slate-900 dark:text-slate-100">{row.guru}</TableCell>
                     <TableCell className="py-4 text-slate-600 dark:text-slate-300">{row.mapel}</TableCell>
                     <TableCell className="py-4 text-center">

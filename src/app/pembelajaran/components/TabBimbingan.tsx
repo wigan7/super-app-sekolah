@@ -67,7 +67,7 @@ export default function TabBimbingan() {
       exit={{ opacity: 0, y: -10 }}
       className="space-y-6"
     >
-      <Accordion type="multiple" defaultValue={["kasus", "bimbingan"]} className="w-full space-y-4">
+      <Accordion defaultValue={["kasus", "bimbingan"]} className="w-full space-y-4">
         <AccordionItem value="kasus" className="border-none bg-white/50 backdrop-blur-sm dark:bg-slate-900/50 rounded-xl px-6 py-2 shadow-sm">
           <AccordionTrigger className="hover:no-underline py-4">
             <div className="flex flex-col items-start text-left">
@@ -87,9 +87,9 @@ export default function TabBimbingan() {
                     <TableHead className="font-medium text-slate-500">Tindak Lanjut</TableHead>
                   </TableRow>
                 </TableHeader>
-                <TableBody as={motion.tbody} variants={containerVariants} initial="hidden" animate="show">
+                <TableBody>
                   {mockKasus.map((row) => (
-                    <TableRow as={motion.tr} variants={itemVariants} key={row.id} className="border-b border-slate-50 dark:border-slate-800 hover:bg-slate-50/80 transition-colors">
+                    <TableRow key={row.id} className="border-b border-slate-50 dark:border-slate-800 hover:bg-slate-50/80 transition-colors">
                       <TableCell className="py-4 font-medium text-slate-900 dark:text-slate-100">{row.nama}</TableCell>
                       <TableCell className="py-4 text-slate-600 dark:text-slate-300">{row.tanggal}</TableCell>
                       <TableCell className="py-4 text-slate-600 dark:text-slate-300">{row.uraian}</TableCell>
@@ -127,9 +127,9 @@ export default function TabBimbingan() {
                     <TableHead className="font-medium text-slate-500">Tindak Lanjut</TableHead>
                   </TableRow>
                 </TableHeader>
-                <TableBody as={motion.tbody} variants={containerVariants} initial="hidden" animate="show">
+                <TableBody>
                   {mockBimbingan.map((row) => (
-                    <TableRow as={motion.tr} variants={itemVariants} key={row.id} className="border-b border-slate-50 dark:border-slate-800 hover:bg-slate-50/80 transition-colors">
+                    <TableRow key={row.id} className="border-b border-slate-50 dark:border-slate-800 hover:bg-slate-50/80 transition-colors">
                       <TableCell className="py-4 text-slate-600 dark:text-slate-300">{row.waktu}</TableCell>
                       <TableCell className="py-4 font-medium text-slate-900 dark:text-slate-100">{row.nama}</TableCell>
                       <TableCell className="py-4 text-slate-600 dark:text-slate-300">{row.masalah}</TableCell>

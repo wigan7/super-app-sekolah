@@ -1,0 +1,11 @@
+{
+  "/_not-found/page": "app/_not-found/page.js",
+  "/_global-error/page": "app/_global-error/page.js",
+  "/api/kesiswaan/route": "app/api/kesiswaan/route.js",
+  "/favicon.ico/route": "app/favicon.ico/route.js",
+  "/kepegawaian/page": "app/kepegawaian/page.js",
+  "/page": "app/page.js",
+  "/pkks/page": "app/pkks/page.js",
+  "/kesiswaan/page": "app/kesiswaan/page.js",
+  "/pembelajaran/page": "app/pembelajaran/page.js"
+}

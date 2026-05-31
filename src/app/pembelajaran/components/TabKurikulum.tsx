@@ -132,9 +132,9 @@ export default function TabKurikulum() {
                   <TableHead className="font-medium text-slate-500 text-center">Jml Jam</TableHead>
                 </TableRow>
               </TableHeader>
-              <TableBody as={motion.tbody} variants={containerVariants} initial="hidden" animate="show">
+              <TableBody>
                 {mockPembagianTugas.map((row) => (
-                  <TableRow as={motion.tr} variants={itemVariants} key={row.id} className="border-b border-slate-50 dark:border-slate-800 hover:bg-slate-50/80 transition-colors">
+                  <TableRow key={row.id} className="border-b border-slate-50 dark:border-slate-800 hover:bg-slate-50/80 transition-colors">
                     <TableCell className="py-4 font-medium text-slate-900 dark:text-slate-100">{row.nama}</TableCell>
                     <TableCell className="py-4 text-slate-600 dark:text-slate-300">{row.golongan}</TableCell>
                     <TableCell className="py-4 text-slate-600 dark:text-slate-300">{row.jabatan}</TableCell>

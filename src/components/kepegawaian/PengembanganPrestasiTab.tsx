@@ -44,7 +44,7 @@ export function PengembanganPrestasiTab() {
         </p>
       </div>
 
-      <Accordion type="single" collapsible className="w-full space-y-4" defaultValue="diklat">
+      <Accordion className="w-full space-y-4" defaultValue={["diklat"]}>
         <AccordionItem value="diklat" className="border border-slate-200 rounded-xl bg-white px-4 shadow-sm">
           <AccordionTrigger className="hover:no-underline font-medium text-slate-900 py-4">
             Buku Diklat/Penataran & Seminar

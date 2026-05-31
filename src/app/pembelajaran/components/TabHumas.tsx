@@ -115,9 +115,9 @@ export default function TabHumas() {
                       <TableHead className="font-medium text-slate-500">Temuan / Kesan</TableHead>
                     </TableRow>
                   </TableHeader>
-                  <TableBody as={motion.tbody} variants={containerVariants} initial="hidden" animate="show">
+                  <TableBody>
                     {mockTamu.map((row) => (
-                      <TableRow as={motion.tr} variants={itemVariants} key={row.id} className="border-b border-slate-50 dark:border-slate-800 hover:bg-slate-50/80 transition-colors">
+                      <TableRow key={row.id} className="border-b border-slate-50 dark:border-slate-800 hover:bg-slate-50/80 transition-colors">
                         <TableCell className="py-4 text-slate-600 dark:text-slate-300">{row.tanggal}</TableCell>
                         <TableCell className="py-4">
                           <div className="font-medium text-slate-900 dark:text-slate-100">{row.nama}</div>
@@ -151,9 +151,9 @@ export default function TabHumas() {
                       <TableHead className="font-medium text-slate-500">Hasil / Keterangan</TableHead>
                     </TableRow>
                   </TableHeader>
-                  <TableBody as={motion.tbody} variants={containerVariants} initial="hidden" animate="show">
+                  <TableBody>
                     {mockHumas.map((row) => (
-                      <TableRow as={motion.tr} variants={itemVariants} key={row.id} className="border-b border-slate-50 dark:border-slate-800 hover:bg-slate-50/80 transition-colors">
+                      <TableRow key={row.id} className="border-b border-slate-50 dark:border-slate-800 hover:bg-slate-50/80 transition-colors">
                         <TableCell className="py-4 text-slate-600 dark:text-slate-300">{row.tanggal}</TableCell>
                         <TableCell className="py-4 font-medium text-slate-900 dark:text-slate-100">{row.kegiatan}</TableCell>
                         <TableCell className="py-4 text-slate-600 dark:text-slate-300">{row.pihak}</TableCell>
@@ -184,9 +184,9 @@ export default function TabHumas() {
                       <TableHead className="font-medium text-slate-500 text-center">Tindak Lanjut & Status</TableHead>
                     </TableRow>
                   </TableHeader>
-                  <TableBody as={motion.tbody} variants={containerVariants} initial="hidden" animate="show">
+                  <TableBody>
                     {mockPengaduan.map((row) => (
-                      <TableRow as={motion.tr} variants={itemVariants} key={row.id} className="border-b border-slate-50 dark:border-slate-800 hover:bg-slate-50/80 transition-colors">
+                      <TableRow key={row.id} className="border-b border-slate-50 dark:border-slate-800 hover:bg-slate-50/80 transition-colors">
                         <TableCell className="py-4">
                           <div className="font-medium text-slate-900 dark:text-slate-100">{row.nama}</div>
                           <div className="text-sm text-slate-500">{row.unsur}</div>

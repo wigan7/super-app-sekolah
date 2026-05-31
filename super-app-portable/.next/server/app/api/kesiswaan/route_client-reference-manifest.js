@@ -1,0 +1,1 @@
+globalThis.__RSC_MANIFEST=(globalThis.__RSC_MANIFEST||{});globalThis.__RSC_MANIFEST["/api/kesiswaan/route"]={"moduleLoading":{"prefix":"/_next/"},"ssrModuleMapping":{},"edgeSSRModuleMapping":{},"clientModules":{},"entryCSSFiles":{"C:\\Users\\Daendels\\Documents\\GitHub\\super-app-sekolah\\src\\app\\api\\kesiswaan\\route":[]},"rscModuleMapping":{},"edgeRscModuleMapping":{}};
