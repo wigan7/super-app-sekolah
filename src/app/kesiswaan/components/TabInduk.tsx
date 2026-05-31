@@ -17,6 +17,7 @@ import { motion, AnimatePresence } from "framer-motion";
 export default function TabInduk() {
   const [data, setData] = useState<Record<string, string>[]>([]);
   const [loading, setLoading] = useState(true);
+  const [namaSekolah, setNamaSekolah] = useState("");
 
   const fetchData = async () => {
     setLoading(true);
@@ -36,6 +37,19 @@ export default function TabInduk() {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchData();
+
+    const fetchSchoolName = async () => {
+      try {
+        const res = await fetch("/api/identitas");
+        if (res.ok) {
+          const data = await res.json();
+          setNamaSekolah(data?.namaSekolah || "");
+        }
+      } catch (error) {
+        console.error("Gagal memuat nama sekolah di kesiswaan:", error);
+      }
+    };
+    fetchSchoolName();
   }, []);
 
   return (
@@ -43,7 +57,7 @@ export default function TabInduk() {
       <CardHeader className="flex flex-row items-center justify-between pb-6">
         <div className="space-y-1">
           <CardTitle className="text-xl font-semibold">Buku Induk & Klapper</CardTitle>
-          <CardDescription>Kelola data induk seluruh siswa SDN Mukiran 03.</CardDescription>
+          <CardDescription>Kelola data induk seluruh siswa {namaSekolah || "(Belum input Nama Sekolah)"}.</CardDescription>
         </div>
         <PendaftaranSheet onSuccess={fetchData} />
       </CardHeader>

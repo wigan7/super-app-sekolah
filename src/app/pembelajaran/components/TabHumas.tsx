@@ -80,6 +80,7 @@ export default function TabHumas() {
   const [tamuForm, setTamuForm] = useState(EMPTY_TAMU);
   const [humasForm, setHumasForm] = useState(EMPTY_HUMAS);
   const [pengaduanForm, setPengaduanForm] = useState(EMPTY_PENGADUAN);
+  const [namaSekolah, setNamaSekolah] = useState("");
 
   const fetchRows = async () => {
     try {
@@ -111,6 +112,19 @@ export default function TabHumas() {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchRows();
+
+    const fetchSchoolName = async () => {
+      try {
+        const res = await fetch("/api/identitas");
+        if (res.ok) {
+          const data = await res.json();
+          setNamaSekolah(data?.namaSekolah || "");
+        }
+      } catch (error) {
+        console.error("Gagal memuat nama sekolah di humas:", error);
+      }
+    };
+    fetchSchoolName();
   }, []);
 
   const save = async (endpoint: string, payload: Record<string, string>, onDone: () => void) => {
@@ -153,7 +167,7 @@ export default function TabHumas() {
             <CardHeader className="pb-3 flex flex-row items-center justify-between">
               <div>
                 <CardTitle className="text-lg font-semibold text-slate-800 dark:text-slate-100">Buku Tamu & Pembinaan</CardTitle>
-                <CardDescription>Catatan kunjungan dinas dan tamu ke SDN Mukiran 03.</CardDescription>
+                <CardDescription>Catatan kunjungan dinas dan tamu ke {namaSekolah || "(Belum input Nama Sekolah)"}.</CardDescription>
               </div>
               <Dialog open={openTamu} onOpenChange={setOpenTamu}>
                 <DialogTrigger render={<Button className="bg-indigo-600 hover:bg-indigo-700 text-white"><Plus className="h-4 w-4 mr-2" />Input Tamu</Button>} />

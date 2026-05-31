@@ -39,6 +39,23 @@ type SchoolData = {
     completedIndicators: Record<string, boolean>;
     links: Record<string, string>;
   };
+  identitas: {
+    namaKepalaSekolah: string;
+    nipKepalaSekolah: string;
+    jabatanKepalaSekolah: string;
+    golonganKepalaSekolah: string;
+    namaSekolah: string;
+    npsn: string;
+    alamat: string;
+    kelurahan: string;
+    kecamatan: string;
+    kabupaten: string;
+    provinsi: string;
+    kodePos: string;
+    telepon: string;
+    email: string;
+    website: string;
+  };
 };
 
 const DEFAULT_SCHOOL_DATA: SchoolData = {
@@ -72,6 +89,23 @@ const DEFAULT_SCHOOL_DATA: SchoolData = {
   pkks: {
     completedIndicators: {},
     links: {},
+  },
+  identitas: {
+    namaKepalaSekolah: "",
+    nipKepalaSekolah: "",
+    jabatanKepalaSekolah: "",
+    golonganKepalaSekolah: "",
+    namaSekolah: "",
+    npsn: "",
+    alamat: "",
+    kelurahan: "",
+    kecamatan: "",
+    kabupaten: "",
+    provinsi: "",
+    kodePos: "",
+    telepon: "",
+    email: "",
+    website: "",
   },
 };
 
@@ -120,6 +154,7 @@ export const getSchoolData = async (): Promise<SchoolData> => {
     kepegawaian: { ...DEFAULT_SCHOOL_DATA.kepegawaian, ...(data?.kepegawaian ?? {}) },
     pembelajaran: { ...DEFAULT_SCHOOL_DATA.pembelajaran, ...(data?.pembelajaran ?? {}) },
     pkks: { ...DEFAULT_SCHOOL_DATA.pkks, ...(data?.pkks ?? {}) },
+    identitas: { ...DEFAULT_SCHOOL_DATA.identitas, ...(data?.identitas ?? {}) },
   };
 };
 
@@ -194,4 +229,20 @@ export const getDataPkks = async () => {
 };
 export const updateDataPkks = async (newData: SchoolData['pkks']) => {
   return updatePkksState(newData);
+};
+
+// Identitas
+export const getIdentitas = async () => {
+  const schoolData = await getSchoolData();
+  return schoolData.identitas;
+};
+
+export const updateIdentitas = async (newData: Partial<SchoolData['identitas']>) => {
+  const schoolData = await getSchoolData();
+  schoolData.identitas = {
+    ...schoolData.identitas,
+    ...newData,
+  };
+  await writeSchoolData(schoolData);
+  return schoolData.identitas;
 };

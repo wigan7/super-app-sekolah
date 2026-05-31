@@ -68,6 +68,7 @@ export default function TabKurikulum() {
   const [openTugas, setOpenTugas] = useState(false);
   const [pencapaianForm, setPencapaianForm] = useState(EMPTY_PENCAPAIAN);
   const [tugasForm, setTugasForm] = useState(EMPTY_TUGAS);
+  const [namaSekolah, setNamaSekolah] = useState("");
 
   const fetchRows = async () => {
     try {
@@ -93,6 +94,19 @@ export default function TabKurikulum() {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchRows();
+
+    const fetchSchoolName = async () => {
+      try {
+        const res = await fetch("/api/identitas");
+        if (res.ok) {
+          const data = await res.json();
+          setNamaSekolah(data?.namaSekolah || "");
+        }
+      } catch (error) {
+        console.error("Gagal memuat nama sekolah di kurikulum:", error);
+      }
+    };
+    fetchSchoolName();
   }, []);
 
   const savePencapaian = async () => {
@@ -212,7 +226,7 @@ export default function TabKurikulum() {
         <CardHeader className="pb-3 flex flex-row items-center justify-between">
           <div>
             <CardTitle className="text-lg font-semibold text-slate-800 dark:text-slate-100">Pembagian Tugas Mengajar</CardTitle>
-            <CardDescription>Distribusi beban mengajar guru di SDN Mukiran 03.</CardDescription>
+            <CardDescription>Distribusi beban mengajar guru di {namaSekolah || "(Belum input Nama Sekolah)"}.</CardDescription>
           </div>
           <Dialog open={openTugas} onOpenChange={setOpenTugas}>
             <DialogTrigger render={<Button className="bg-indigo-600 hover:bg-indigo-700 text-white"><Plus className="h-4 w-4 mr-2" />Input Tugas</Button>} />

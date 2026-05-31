@@ -34,6 +34,7 @@ export default function Dashboard() {
     totalGuru: "0",
     pkksProgress: "0%",
   });
+  const [identitas, setIdentitas] = useState<{ namaKepalaSekolah?: string; namaSekolah?: string }>({});
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -52,7 +53,20 @@ export default function Dashboard() {
       }
     };
 
+    const fetchIdentitas = async () => {
+      try {
+        const response = await fetch('/api/identitas');
+        if (response.ok) {
+          const data = await response.json();
+          setIdentitas(data || {});
+        }
+      } catch (error) {
+        console.error("Failed to fetch school identity:", error);
+      }
+    };
+
     fetchDashboardData();
+    fetchIdentitas();
   }, []);
 
   const summaryData = [
@@ -89,10 +103,10 @@ export default function Dashboard() {
             transition={{ duration: 0.4 }}
           >
             <h1 className="text-3xl font-bold tracking-tight text-slate-900">
-              Selamat Datang, Kepala Sekolah
+              Selamat Datang, {identitas.namaKepalaSekolah || "(Belum input Nama Kepala Sekolah)"}
             </h1>
             <p className="text-slate-500 mt-2">
-              Berikut adalah ringkasan informasi sekolah hari ini.
+              Berikut adalah ringkasan informasi {identitas.namaSekolah || "(Belum input Nama Sekolah)"} hari ini.
             </p>
           </motion.div>
         </header>

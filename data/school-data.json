@@ -1,0 +1,50 @@
+{
+  "kesiswaan": {
+    "induk": [],
+    "akademikPrestasi": [],
+    "kehadiranHarian": [],
+    "kehadiranBulanan": [],
+    "mutasiMasuk": [],
+    "mutasiKeluar": []
+  },
+  "kepegawaian": {
+    "pegawai": [],
+    "izinKeluar": [],
+    "piket": [],
+    "diklat": [],
+    "penghargaan": [],
+    "inventaris": []
+  },
+  "pembelajaran": {
+    "supervisi": [],
+    "administrasi": [],
+    "kasus": [],
+    "bimbingan": [],
+    "kurikulumPencapaian": [],
+    "pembagianTugas": [],
+    "tamu": [],
+    "humas": [],
+    "pengaduan": []
+  },
+  "pkks": {
+    "completedIndicators": {},
+    "links": {}
+  },
+  "identitas": {
+    "namaKepalaSekolah": "",
+    "nipKepalaSekolah": "",
+    "jabatanKepalaSekolah": "",
+    "golonganKepalaSekolah": "",
+    "namaSekolah": "",
+    "npsn": "",
+    "alamat": "",
+    "kelurahan": "",
+    "kecamatan": "",
+    "kabupaten": "",
+    "provinsi": "",
+    "kodePos": "",
+    "telepon": "",
+    "email": "",
+    "website": ""
+  }
+}

@@ -79,6 +79,7 @@ export default function PKKSDashboard() {
   const [completedIndicators, setCompletedIndicators] = useState<Record<string, boolean>>({});
   const [links, setLinks] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
+  const [identitas, setIdentitas] = useState<{ namaKepalaSekolah?: string; namaSekolah?: string }>({});
 
   const totalIndicators = useMemo(() => {
     return pkksData.reduce((acc, curr) => acc + curr.indicators.length, 0);
@@ -120,7 +121,20 @@ export default function PKKSDashboard() {
       }
     };
 
+    const fetchIdentitas = async () => {
+      try {
+        const res = await fetch('/api/identitas');
+        if (res.ok) {
+          const data = await res.json();
+          setIdentitas(data || {});
+        }
+      } catch (error) {
+        console.error('Failed to fetch school identity in PKKS:', error);
+      }
+    };
+
     fetchPkks();
+    fetchIdentitas();
   }, []);
 
   const savePkks = async () => {
@@ -152,9 +166,9 @@ export default function PKKSDashboard() {
             Penilaian Kinerja Kepala Sekolah
           </h1>
           <p className="text-gray-500 mt-1 flex items-center gap-2">
-            <span className="font-medium text-gray-700">Wigan Anggit Utomo</span> 
+            <span className="font-medium text-gray-700">{identitas.namaKepalaSekolah || "(Belum input Nama Kepala Sekolah)"}</span> 
             <span className="text-gray-400">|</span> 
-            <span>SDN Mukiran 03</span>
+            <span>{identitas.namaSekolah || "(Belum input Nama Sekolah)"}</span>
           </p>
         </div>
 

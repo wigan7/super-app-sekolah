@@ -58,6 +58,7 @@ export function DataPegawaiTab() {
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
+  const [namaSekolah, setNamaSekolah] = useState("");
 
   const fetchRows = async () => {
     try {
@@ -76,6 +77,19 @@ export function DataPegawaiTab() {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchRows();
+
+    const fetchSchoolName = async () => {
+      try {
+        const res = await fetch("/api/identitas");
+        if (res.ok) {
+          const data = await res.json();
+          setNamaSekolah(data?.namaSekolah || "");
+        }
+      } catch (error) {
+        console.error("Gagal memuat nama sekolah di kepegawaian:", error);
+      }
+    };
+    fetchSchoolName();
   }, []);
 
   const toggleExpand = (id: string) => {
@@ -120,7 +134,7 @@ export function DataPegawaiTab() {
             Daftar Guru & Pegawai
           </h2>
           <p className="text-sm text-slate-500">
-            SDN Mukiran 03 - Data pokok kepegawaian dan riwayat penilaian.
+            {namaSekolah || "(Belum input Nama Sekolah)"} - Data pokok kepegawaian dan riwayat penilaian.
           </p>
         </div>
 

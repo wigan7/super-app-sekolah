@@ -71,6 +71,7 @@ export default function TabSupervisi() {
   const [openAdmin, setOpenAdmin] = useState(false);
   const [supervisiForm, setSupervisiForm] = useState(EMPTY_SUPERVISI);
   const [adminForm, setAdminForm] = useState(EMPTY_ADMIN);
+  const [namaSekolah, setNamaSekolah] = useState("");
 
   const fetchRows = async () => {
     try {
@@ -96,6 +97,19 @@ export default function TabSupervisi() {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchRows();
+
+    const fetchSchoolName = async () => {
+      try {
+        const res = await fetch("/api/identitas");
+        if (res.ok) {
+          const data = await res.json();
+          setNamaSekolah(data?.namaSekolah || "");
+        }
+      } catch (error) {
+        console.error("Gagal memuat nama sekolah di supervisi:", error);
+      }
+    };
+    fetchSchoolName();
   }, []);
 
   const saveSupervisi = async () => {
@@ -199,7 +213,7 @@ export default function TabSupervisi() {
       <Card className="border-none shadow-sm bg-white/50 backdrop-blur-sm dark:bg-slate-900/50">
         <CardHeader className="pb-3">
           <CardTitle className="text-lg font-semibold text-slate-800 dark:text-slate-100">Buku Supervisi Kelas</CardTitle>
-          <CardDescription>Jadwal dan hasil supervisi akademik di SDN Mukiran 03.</CardDescription>
+          <CardDescription>Jadwal dan hasil supervisi akademik di {namaSekolah || "(Belum input Nama Sekolah)"}.</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto rounded-xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-950">
