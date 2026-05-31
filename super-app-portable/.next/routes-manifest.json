@@ -21,7 +21,17 @@
     "afterFiles": [],
     "fallback": []
   },
-  "dynamicRoutes": [],
+  "dynamicRoutes": [
+    {
+      "page": "/api/data/[section]/[dataset]",
+      "regex": "^/api/data/([^/]+?)/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPsection": "nxtPsection",
+        "nxtPdataset": "nxtPdataset"
+      },
+      "namedRegex": "^/api/data/(?<nxtPsection>[^/]+?)/(?<nxtPdataset>[^/]+?)(?:/)?$"
+    }
+  ],
   "staticRoutes": [
     {
       "page": "/",
@@ -42,16 +52,52 @@
       "namedRegex": "^/_not\\-found(?:/)?$"
     },
     {
+      "page": "/api/backup",
+      "regex": "^/api/backup(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/backup(?:/)?$"
+    },
+    {
+      "page": "/api/dashboard",
+      "regex": "^/api/dashboard(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/dashboard(?:/)?$"
+    },
+    {
+      "page": "/api/identitas",
+      "regex": "^/api/identitas(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/identitas(?:/)?$"
+    },
+    {
       "page": "/api/kesiswaan",
       "regex": "^/api/kesiswaan(?:/)?$",
       "routeKeys": {},
       "namedRegex": "^/api/kesiswaan(?:/)?$"
     },
     {
+      "page": "/api/pkks",
+      "regex": "^/api/pkks(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/pkks(?:/)?$"
+    },
+    {
+      "page": "/api/reset",
+      "regex": "^/api/reset(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/reset(?:/)?$"
+    },
+    {
       "page": "/favicon.ico",
       "regex": "^/favicon\\.ico(?:/)?$",
       "routeKeys": {},
       "namedRegex": "^/favicon\\.ico(?:/)?$"
+    },
+    {
+      "page": "/identitas",
+      "regex": "^/identitas(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/identitas(?:/)?$"
     },
     {
       "page": "/kepegawaian",

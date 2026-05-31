@@ -1,0 +1,1 @@
+globalThis.__RSC_MANIFEST=(globalThis.__RSC_MANIFEST||{});globalThis.__RSC_MANIFEST["/api/reset/route"]={"moduleLoading":{"prefix":"/_next/"},"ssrModuleMapping":{},"edgeSSRModuleMapping":{},"clientModules":{},"entryCSSFiles":{"D:\\Documents\\GitHub\\super-app-sekolah\\src\\app\\api\\reset\\route":[]},"rscModuleMapping":{},"edgeRscModuleMapping":{}};
