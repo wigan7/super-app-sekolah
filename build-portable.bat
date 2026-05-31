@@ -32,13 +32,26 @@ curl -# -Lo super-app-portable\node.exe https://nodejs.org/dist/v20.12.0/win-x64
 
 echo.
 echo ===================================================
+echo Membuat Script Pendeteksi Port...
+echo ===================================================
+echo const net = require('net'); > "super-app-portable\get-port.js"
+echo const server = net.createServer(); >> "super-app-portable\get-port.js"
+echo server.listen(0, () =^> { >> "super-app-portable\get-port.js"
+echo   console.log(server.address().port); >> "super-app-portable\get-port.js"
+echo   server.close(); >> "super-app-portable\get-port.js"
+echo }); >> "super-app-portable\get-port.js"
+
+echo.
+echo ===================================================
 echo Membuat Shortcut "Jalankan Aplikasi.bat"...
 echo ===================================================
 (
 echo @echo off
 echo cd /d "%%~dp0"
-echo echo Memulai server lokal...
-echo start http://localhost:3000
+echo echo Mencari port yang tidak terpakai...
+echo for /f "tokens=*" %%%%i in ('node.exe get-port.js'^) do set PORT=%%%%i
+echo echo Aplikasi akan berjalan pada port %%PORT%%
+echo start http://localhost:%%PORT%%
 echo node.exe server.js
 echo pause
 ) > "super-app-portable\Jalankan Aplikasi.bat"
