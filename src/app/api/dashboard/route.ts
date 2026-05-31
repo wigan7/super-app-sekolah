@@ -13,8 +13,6 @@ export async function GET() {
     let pkksProgress = 0;
     if (pkks && pkks.completedIndicators) {
       const completedCount = Object.values(pkks.completedIndicators).filter(Boolean).length;
-      // We know there are 13 total indicators from PKKSDashboard.tsx, or we can just hardcode 13
-      // let's hardcode 13 for now as the total indicators in the dashboard
       const totalIndicators = 13;
       pkksProgress = Math.round((completedCount / totalIndicators) * 100);
     }

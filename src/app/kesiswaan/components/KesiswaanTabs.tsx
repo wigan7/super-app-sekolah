@@ -53,7 +53,7 @@ export default function KesiswaanTabs() {
       </div>
 
       {/* Tab Content Area */}
-      <div className="min-h-[400px]">
+      <div className="min-h-100">
         {activeTab === "induk" && <TabInduk />}
         {activeTab === "kehadiran" && <TabKehadiran />}
         {activeTab === "mutasi" && <TabMutasi />}

@@ -53,7 +53,7 @@ export default function PembelajaranTabs() {
       </div>
 
       {/* Tab Content Area */}
-      <div className="min-h-[400px]">
+      <div className="min-h-100">
         {activeTab === "supervisi" && <TabSupervisi />}
         {activeTab === "bimbingan" && <TabBimbingan />}
         {activeTab === "kurikulum" && <TabKurikulum />}

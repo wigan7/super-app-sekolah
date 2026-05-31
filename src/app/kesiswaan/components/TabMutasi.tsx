@@ -1,3 +1,6 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import {
   Table,
@@ -9,16 +12,54 @@ import {
 } from "@/components/ui/table";
 import MutasiDialog from "./MutasiDialog";
 
-const mockMasuk = [
-  { tanggal: "10 Jul 2026", nama: "Farhan Maulana", dari: "SDN Karangjati 01", kelas: "4A", keterangan: "Ikut Orangtua" },
-  { tanggal: "15 Jul 2026", nama: "Nisa Azzahra", dari: "MI Al-Huda", kelas: "3B", keterangan: "Pindah Domisili" },
-];
+type MutasiMasuk = {
+  id: string;
+  tanggal: string;
+  nama: string;
+  dari: string;
+  kelas: string;
+  keterangan: string;
+};
 
-const mockKeluar = [
-  { tanggal: "05 Jun 2026", nama: "Kevin Sanjaya", ke: "SDN Ngampin 02", kelas: "5B", keterangan: "Pindah Domisili" },
-];
+type MutasiKeluar = {
+  id: string;
+  tanggal: string;
+  nama: string;
+  ke: string;
+  kelas: string;
+  keterangan: string;
+};
 
 export default function TabMutasi() {
+  const [masukRows, setMasukRows] = useState<MutasiMasuk[]>([]);
+  const [keluarRows, setKeluarRows] = useState<MutasiKeluar[]>([]);
+
+  const fetchRows = async () => {
+    try {
+      const [masukRes, keluarRes] = await Promise.all([
+        fetch("/api/data/kesiswaan/mutasiMasuk"),
+        fetch("/api/data/kesiswaan/mutasiKeluar"),
+      ]);
+
+      if (masukRes.ok) {
+        const data = await masukRes.json();
+        setMasukRows(Array.isArray(data) ? data : []);
+      }
+
+      if (keluarRes.ok) {
+        const data = await keluarRes.json();
+        setKeluarRows(Array.isArray(data) ? data : []);
+      }
+    } catch (error) {
+      console.error("Gagal memuat data mutasi:", error);
+    }
+  };
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchRows();
+  }, []);
+
   return (
     <div className="space-y-6">
       <Card className="border-none shadow-sm">
@@ -27,10 +68,10 @@ export default function TabMutasi() {
             <CardTitle className="text-xl font-semibold">Buku Rekap Mutasi</CardTitle>
             <CardDescription>Catatan mutasi siswa masuk dan keluar / pindah.</CardDescription>
           </div>
-          <MutasiDialog />
+          <MutasiDialog onSuccess={fetchRows} />
         </CardHeader>
       </Card>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card className="border-none shadow-sm ring-1 ring-emerald-500/20">
           <CardHeader className="bg-emerald-50/50 dark:bg-emerald-950/20 pb-4">
@@ -47,14 +88,20 @@ export default function TabMutasi() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {mockMasuk.map((item, i) => (
-                  <TableRow key={i}>
-                    <TableCell className="text-xs text-slate-500">{item.tanggal}</TableCell>
-                    <TableCell className="font-medium">{item.nama}</TableCell>
-                    <TableCell className="text-sm">{item.dari}</TableCell>
-                    <TableCell className="text-center">{item.kelas}</TableCell>
+                {masukRows.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={4} className="h-24 text-center text-slate-500">Belum ada data mutasi masuk.</TableCell>
                   </TableRow>
-                ))}
+                ) : (
+                  masukRows.map((item) => (
+                    <TableRow key={item.id}>
+                      <TableCell className="text-xs text-slate-500">{item.tanggal}</TableCell>
+                      <TableCell className="font-medium">{item.nama}</TableCell>
+                      <TableCell className="text-sm">{item.dari}</TableCell>
+                      <TableCell className="text-center">{item.kelas}</TableCell>
+                    </TableRow>
+                  ))
+                )}
               </TableBody>
             </Table>
           </CardContent>
@@ -75,14 +122,20 @@ export default function TabMutasi() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {mockKeluar.map((item, i) => (
-                  <TableRow key={i}>
-                    <TableCell className="text-xs text-slate-500">{item.tanggal}</TableCell>
-                    <TableCell className="font-medium">{item.nama}</TableCell>
-                    <TableCell className="text-sm">{item.ke}</TableCell>
-                    <TableCell className="text-center">{item.kelas}</TableCell>
+                {keluarRows.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={4} className="h-24 text-center text-slate-500">Belum ada data mutasi keluar.</TableCell>
                   </TableRow>
-                ))}
+                ) : (
+                  keluarRows.map((item) => (
+                    <TableRow key={item.id}>
+                      <TableCell className="text-xs text-slate-500">{item.tanggal}</TableCell>
+                      <TableCell className="font-medium">{item.nama}</TableCell>
+                      <TableCell className="text-sm">{item.ke}</TableCell>
+                      <TableCell className="text-center">{item.kelas}</TableCell>
+                    </TableRow>
+                  ))
+                )}
               </TableBody>
             </Table>
           </CardContent>

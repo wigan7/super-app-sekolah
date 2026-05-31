@@ -15,7 +15,7 @@ import PendaftaranSheet from "./PendaftaranSheet";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function TabInduk() {
-  const [data, setData] = useState<any[]>([]);
+  const [data, setData] = useState<Record<string, string>[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchData = async () => {
@@ -34,6 +34,7 @@ export default function TabInduk() {
   };
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchData();
   }, []);
 
@@ -51,7 +52,7 @@ export default function TabInduk() {
           <Table>
             <TableHeader className="bg-slate-50 dark:bg-slate-800/50">
               <TableRow>
-                <TableHead className="w-[80px]">No</TableHead>
+                <TableHead className="w-20">No</TableHead>
                 <TableHead>NISN</TableHead>
                 <TableHead>Nama Lengkap</TableHead>
                 <TableHead>Kelas</TableHead>

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import {
   Accordion,
@@ -78,6 +78,7 @@ const pkksData: PKKSComponent[] = [
 export default function PKKSDashboard() {
   const [completedIndicators, setCompletedIndicators] = useState<Record<string, boolean>>({});
   const [links, setLinks] = useState<Record<string, string>>({});
+  const [saving, setSaving] = useState(false);
 
   const totalIndicators = useMemo(() => {
     return pkksData.reduce((acc, curr) => acc + curr.indicators.length, 0);
@@ -101,6 +102,45 @@ export default function PKKSDashboard() {
       ...prev,
       [id]: value,
     }));
+  };
+
+  useEffect(() => {
+    const fetchPkks = async () => {
+      try {
+        const res = await fetch('/api/pkks');
+        if (!res.ok) {
+          return;
+        }
+
+        const data = await res.json();
+        setCompletedIndicators(data?.completedIndicators ?? {});
+        setLinks(data?.links ?? {});
+      } catch (error) {
+        console.error('Failed to fetch PKKS data:', error);
+      }
+    };
+
+    fetchPkks();
+  }, []);
+
+  const savePkks = async () => {
+    setSaving(true);
+    try {
+      const res = await fetch('/api/pkks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ completedIndicators, links }),
+      });
+
+      if (!res.ok) {
+        alert('Gagal menyimpan data PKKS.');
+      }
+    } catch (error) {
+      console.error('Failed to save PKKS data:', error);
+      alert('Terjadi kesalahan saat menyimpan PKKS.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -139,11 +179,21 @@ export default function PKKSDashboard() {
           </div>
           <div className="h-3 w-full bg-gray-100 rounded-full overflow-hidden">
             <motion.div
-              className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full"
+              className="h-full bg-linear-to-r from-blue-500 to-indigo-500 rounded-full"
               initial={{ width: 0 }}
               animate={{ width: `${progressPercentage}%` }}
               transition={{ ease: "easeOut", duration: 0.8 }}
             />
+          </div>
+          <div className="flex justify-end">
+            <button
+              type="button"
+              onClick={savePkks}
+              disabled={saving}
+              className="inline-flex items-center rounded-md bg-blue-600 px-3 py-2 text-xs font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {saving ? 'Menyimpan...' : 'Simpan PKKS'}
+            </button>
           </div>
         </div>
       </div>
@@ -159,7 +209,7 @@ export default function PKKSDashboard() {
             >
               <AccordionTrigger className="hover:no-underline py-5 group">
                 <div className="flex items-center text-left gap-4">
-                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-sm group-hover:bg-blue-100 transition-colors">
+                  <div className="shrink-0 w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-sm group-hover:bg-blue-100 transition-colors">
                     {idx + 1}
                   </div>
                   <span className="font-semibold text-gray-800 text-lg group-hover:text-blue-600 transition-colors">
