@@ -1,1 +1,0 @@
-globalThis.__RSC_MANIFEST=(globalThis.__RSC_MANIFEST||{});globalThis.__RSC_MANIFEST["/api/pkks/route"]={"moduleLoading":{"prefix":"/_next/"},"ssrModuleMapping":{},"edgeSSRModuleMapping":{},"clientModules":{},"entryCSSFiles":{"D:\\Documents\\GitHub\\super-app-sekolah\\src\\app\\api\\pkks\\route":[]},"rscModuleMapping":{},"edgeRscModuleMapping":{}};
