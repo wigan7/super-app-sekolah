@@ -14,7 +14,6 @@ import {
   Mail, 
   Globe, 
   Hash, 
-  FileText,
   BadgeInfo
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -109,7 +108,11 @@ export default function IdentitasPage() {
   }
 
   return (
-    <div className="flex-1 overflow-y-auto bg-slate-50/50 relative">
+    <div className="flex-1 overflow-y-auto bg-linear-to-tr from-slate-50 via-slate-100/50 to-indigo-50/30 relative">
+      {/* Premium Ambient Background Glowing Blobs */}
+      <div className="absolute top-[-10%] left-[-5%] w-[450px] h-[450px] rounded-full bg-indigo-200/30 blur-[130px] pointer-events-none" />
+      <div className="absolute bottom-[10%] right-[-10%] w-[550px] h-[550px] rounded-full bg-purple-200/20 blur-[160px] pointer-events-none" />
+
       {/* Toast Notification */}
       {showToast && (
         <motion.div
@@ -118,15 +121,15 @@ export default function IdentitasPage() {
           exit={{ opacity: 0, y: -20, scale: 0.95 }}
           className="fixed top-6 right-6 z-50 flex items-center gap-3 bg-emerald-600 text-white px-5 py-3.5 rounded-xl shadow-lg border border-emerald-500/20"
         >
-          <CheckCircle2 className="w-5 h-5" />
+          <CheckCircle2 className="w-5 h-5 shrink-0" />
           <div>
-            <p className="font-semibold text-sm">Berhasil Disimpan!</p>
+            <p className="font-bold text-sm">Berhasil Disimpan!</p>
             <p className="text-xs text-emerald-100">Data identitas sekolah telah diperbarui.</p>
           </div>
         </motion.div>
       )}
 
-      <div className="max-w-6xl mx-auto p-8 space-y-8">
+      <div className="max-w-6xl mx-auto p-4 md:p-8 space-y-8 relative z-10">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
@@ -146,7 +149,7 @@ export default function IdentitasPage() {
             
             {/* Left Column: Headmaster Profile Card */}
             <div className="lg:col-span-1 space-y-6">
-              <Card className="border-slate-200/60 shadow-sm overflow-hidden bg-white sticky top-8">
+              <Card className="overflow-hidden sticky top-8">
                 <div className="h-2 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500" />
                 <CardHeader className="text-center pb-2">
                   <div className="mx-auto w-20 h-20 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600 mb-4 border border-indigo-100 shadow-inner">
@@ -207,21 +210,21 @@ export default function IdentitasPage() {
 
             {/* Right Column: School details Form */}
             <div className="lg:col-span-2 space-y-6">
-              <Card className="border-slate-200/60 shadow-sm bg-white">
+              <Card>
                 <CardHeader className="border-b border-slate-100/80 pb-4 flex flex-row items-center gap-3">
-                  <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg">
-                    <School className="w-5 h-5" />
+                  <div className="p-2.5 bg-indigo-50/80 backdrop-blur-xs text-indigo-600 rounded-xl border border-indigo-100/50">
+                    <School className="w-5 h-5 text-indigo-500" />
                   </div>
                   <div>
-                    <CardTitle className="text-lg">Profil & Identitas Sekolah</CardTitle>
-                    <CardDescription>Detail kelembagaan dan informasi operasional sekolah</CardDescription>
+                    <CardTitle className="text-lg font-bold text-slate-900">Profil & Identitas Sekolah</CardTitle>
+                    <CardDescription className="text-slate-500 font-medium">Detail kelembagaan dan informasi operasional sekolah</CardDescription>
                   </div>
                 </CardHeader>
                 <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6">
                   
                   <div className="space-y-2 md:col-span-2">
-                    <Label htmlFor="namaSekolah" className="flex items-center gap-2">
-                      <Building className="w-4 h-4 text-slate-400" />
+                    <Label htmlFor="namaSekolah" className="flex items-center gap-2 text-xs font-bold text-slate-700">
+                      <Building className="w-4 h-4 text-slate-400 shrink-0" />
                       Nama Sekolah
                     </Label>
                     <Input
@@ -229,13 +232,13 @@ export default function IdentitasPage() {
                       placeholder="Masukkan nama resmi sekolah"
                       value={form.namaSekolah}
                       onChange={(e) => handleInputChange("namaSekolah", e.target.value)}
-                      className="bg-slate-50/30 focus-visible:bg-white transition-colors text-base font-medium"
+                      className="bg-white/50 border-slate-200/60 text-slate-800 placeholder:text-slate-400 focus-visible:bg-white transition-colors text-base font-semibold"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="npsn" className="flex items-center gap-2">
-                      <Hash className="w-4 h-4 text-slate-400" />
+                    <Label htmlFor="npsn" className="flex items-center gap-2 text-xs font-bold text-slate-700">
+                      <Hash className="w-4 h-4 text-slate-400 shrink-0" />
                       NPSN (Nomor Pokok Sekolah Nasional)
                     </Label>
                     <Input
@@ -243,13 +246,13 @@ export default function IdentitasPage() {
                       placeholder="Contoh: 20302302"
                       value={form.npsn}
                       onChange={(e) => handleInputChange("npsn", e.target.value)}
-                      className="bg-slate-50/30 focus-visible:bg-white transition-colors"
+                      className="bg-white/50 border-slate-200/60 text-slate-800 placeholder:text-slate-400 focus-visible:bg-white transition-colors"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="kodePos" className="flex items-center gap-2">
-                      <MapPin className="w-4 h-4 text-slate-400" />
+                    <Label htmlFor="kodePos" className="flex items-center gap-2 text-xs font-bold text-slate-700">
+                      <MapPin className="w-4 h-4 text-slate-400 shrink-0" />
                       Kode Pos
                     </Label>
                     <Input
@@ -257,13 +260,13 @@ export default function IdentitasPage() {
                       placeholder="Contoh: 50774"
                       value={form.kodePos}
                       onChange={(e) => handleInputChange("kodePos", e.target.value)}
-                      className="bg-slate-50/30 focus-visible:bg-white transition-colors"
+                      className="bg-white/50 border-slate-200/60 text-slate-800 placeholder:text-slate-400 focus-visible:bg-white transition-colors"
                     />
                   </div>
 
                   <div className="space-y-2 md:col-span-2">
-                    <Label htmlFor="alamat" className="flex items-center gap-2">
-                      <MapPin className="w-4 h-4 text-slate-400" />
+                    <Label htmlFor="alamat" className="flex items-center gap-2 text-xs font-bold text-slate-700">
+                      <MapPin className="w-4 h-4 text-slate-400 shrink-0" />
                       Alamat Jalan / Lokasi
                     </Label>
                     <Input
@@ -271,61 +274,61 @@ export default function IdentitasPage() {
                       placeholder="Nama jalan, nomor, RT/RW"
                       value={form.alamat}
                       onChange={(e) => handleInputChange("alamat", e.target.value)}
-                      className="bg-slate-50/30 focus-visible:bg-white transition-colors"
+                      className="bg-white/50 border-slate-200/60 text-slate-800 placeholder:text-slate-400 focus-visible:bg-white transition-colors"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="kelurahan">Kelurahan / Desa</Label>
+                    <Label htmlFor="kelurahan" className="text-xs font-bold text-slate-700">Kelurahan / Desa</Label>
                     <Input
                       id="kelurahan"
                       placeholder="Nama Kelurahan atau Desa"
                       value={form.kelurahan}
                       onChange={(e) => handleInputChange("kelurahan", e.target.value)}
-                      className="bg-slate-50/30 focus-visible:bg-white transition-colors"
+                      className="bg-white/50 border-slate-200/60 text-slate-800 placeholder:text-slate-400 focus-visible:bg-white transition-colors"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="kecamatan">Kecamatan</Label>
+                    <Label htmlFor="kecamatan" className="text-xs font-bold text-slate-700">Kecamatan</Label>
                     <Input
                       id="kecamatan"
                       placeholder="Nama Kecamatan"
                       value={form.kecamatan}
                       onChange={(e) => handleInputChange("kecamatan", e.target.value)}
-                      className="bg-slate-50/30 focus-visible:bg-white transition-colors"
+                      className="bg-white/50 border-slate-200/60 text-slate-800 placeholder:text-slate-400 focus-visible:bg-white transition-colors"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="kabupaten">Kabupaten / Kota</Label>
+                    <Label htmlFor="kabupaten" className="text-xs font-bold text-slate-700">Kabupaten / Kota</Label>
                     <Input
                       id="kabupaten"
                       placeholder="Nama Kabupaten atau Kota"
                       value={form.kabupaten}
                       onChange={(e) => handleInputChange("kabupaten", e.target.value)}
-                      className="bg-slate-50/30 focus-visible:bg-white transition-colors"
+                      className="bg-white/50 border-slate-200/60 text-slate-800 placeholder:text-slate-400 focus-visible:bg-white transition-colors"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="provinsi">Provinsi</Label>
+                    <Label htmlFor="provinsi" className="text-xs font-bold text-slate-700">Provinsi</Label>
                     <Input
                       id="provinsi"
                       placeholder="Nama Provinsi"
                       value={form.provinsi}
                       onChange={(e) => handleInputChange("provinsi", e.target.value)}
-                      className="bg-slate-50/30 focus-visible:bg-white transition-colors"
+                      className="bg-white/50 border-slate-200/60 text-slate-800 placeholder:text-slate-400 focus-visible:bg-white transition-colors"
                     />
                   </div>
 
-                  <div className="space-y-2 md:col-span-2 border-t border-slate-100 pt-4 mt-2">
-                    <h3 className="text-sm font-semibold text-slate-800 mb-2">Informasi Kontak & Media</h3>
+                  <div className="space-y-2 md:col-span-2 border-t border-slate-200/60 pt-4 mt-2">
+                    <h3 className="text-xs font-extrabold text-slate-900 tracking-wider uppercase">Informasi Kontak & Media</h3>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="telepon" className="flex items-center gap-2">
-                      <Phone className="w-4 h-4 text-slate-400" />
+                    <Label htmlFor="telepon" className="flex items-center gap-2 text-xs font-bold text-slate-700">
+                      <Phone className="w-4 h-4 text-slate-400 shrink-0" />
                       Nomor Telepon
                     </Label>
                     <Input
@@ -333,13 +336,13 @@ export default function IdentitasPage() {
                       placeholder="Telepon sekolah / Fax"
                       value={form.telepon}
                       onChange={(e) => handleInputChange("telepon", e.target.value)}
-                      className="bg-slate-50/30 focus-visible:bg-white transition-colors"
+                      className="bg-white/50 border-slate-200/60 text-slate-800 placeholder:text-slate-400 focus-visible:bg-white transition-colors"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="email" className="flex items-center gap-2">
-                      <Mail className="w-4 h-4 text-slate-400" />
+                    <Label htmlFor="email" className="flex items-center gap-2 text-xs font-bold text-slate-700">
+                      <Mail className="w-4 h-4 text-slate-400 shrink-0" />
                       Email Sekolah
                     </Label>
                     <Input
@@ -348,13 +351,13 @@ export default function IdentitasPage() {
                       placeholder="sekolah@kemdikbud.go.id"
                       value={form.email}
                       onChange={(e) => handleInputChange("email", e.target.value)}
-                      className="bg-slate-50/30 focus-visible:bg-white transition-colors"
+                      className="bg-white/50 border-slate-200/60 text-slate-800 placeholder:text-slate-400 focus-visible:bg-white transition-colors"
                     />
                   </div>
 
                   <div className="space-y-2 md:col-span-2">
-                    <Label htmlFor="website" className="flex items-center gap-2">
-                      <Globe className="w-4 h-4 text-slate-400" />
+                    <Label htmlFor="website" className="flex items-center gap-2 text-xs font-bold text-slate-700">
+                      <Globe className="w-4 h-4 text-slate-400 shrink-0" />
                       Website
                     </Label>
                     <Input
@@ -362,7 +365,7 @@ export default function IdentitasPage() {
                       placeholder="https://www.sekolahanda.sch.id"
                       value={form.website}
                       onChange={(e) => handleInputChange("website", e.target.value)}
-                      className="bg-slate-50/30 focus-visible:bg-white transition-colors"
+                      className="bg-white/50 border-slate-200/60 text-slate-800 placeholder:text-slate-400 focus-visible:bg-white transition-colors"
                     />
                   </div>
 
@@ -370,20 +373,20 @@ export default function IdentitasPage() {
               </Card>
 
               {/* Action Buttons */}
-              <div className="flex items-center justify-end gap-3 bg-white p-4 rounded-xl border border-slate-200/60 shadow-sm">
+              <div className="flex items-center justify-end gap-3 border border-white/50 bg-white/70 backdrop-blur-lg p-4 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.01)]">
                 <Button 
                   type="submit" 
                   disabled={saving}
-                  className="bg-indigo-600 text-white hover:bg-indigo-700 font-semibold px-6 py-2 h-11 shadow-sm shrink-0 flex items-center gap-2 rounded-lg cursor-pointer"
+                  className="bg-indigo-600 text-white hover:bg-indigo-700 font-bold px-6 py-2.5 h-11 shadow-md hover:shadow-indigo-500/10 shrink-0 flex items-center gap-2 rounded-xl cursor-pointer active:scale-98 transition-all"
                 >
                   {saving ? (
                     <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <Loader2 className="w-4 h-4 animate-spin text-white" />
                       <span>Menyimpan...</span>
                     </>
                   ) : (
                     <>
-                      <Save className="w-4 h-4" />
+                      <Save className="w-4 h-4 text-white" />
                       <span>Simpan Perubahan</span>
                     </>
                   )}

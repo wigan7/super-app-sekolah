@@ -14,7 +14,8 @@ import {
   Download, 
   Upload, 
   CheckCircle2, 
-  AlertTriangle 
+  AlertTriangle,
+  Trash2
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import {
@@ -77,8 +78,41 @@ export function Sidebar() {
   const [importSuccess, setImportSuccess] = useState(false);
   const [fileError, setFileError] = useState("");
 
+  // Reset States
+  const [openReset, setOpenReset] = useState(false);
+  const [resetConfirmText, setResetConfirmText] = useState("");
+  const [resetting, setResetting] = useState(false);
+  const [resetSuccess, setResetSuccess] = useState(false);
+  const [resetError, setResetError] = useState("");
+
   const handleExport = () => {
     window.location.href = "/api/backup";
+  };
+
+  const handleReset = async () => {
+    if (resetConfirmText !== "RESET") return;
+
+    setResetting(true);
+    setResetError("");
+    try {
+      const res = await fetch("/api/reset", {
+        method: "POST",
+      });
+
+      if (res.ok) {
+        setResetSuccess(true);
+        setTimeout(() => {
+          setOpenReset(false);
+          window.location.reload();
+        }, 1500);
+      } else {
+        setResetError("Gagal mereset data.");
+      }
+    } catch (err) {
+      setResetError("Terjadi kesalahan koneksi.");
+    } finally {
+      setResetting(false);
+    }
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -168,7 +202,76 @@ export function Sidebar() {
         })}
       </nav>
       {/* Backup & Restore Data Trigger */}
-      <div className="px-4 py-2 border-t border-slate-100/80 bg-slate-50/20">
+      <div className="px-4 py-2 border-t border-slate-100/80 bg-slate-50/20 flex flex-col gap-2">
+        {/* Reset All Data Trigger */}
+        <Dialog open={openReset} onOpenChange={(val) => { setOpenReset(val); if(!val) { setResetConfirmText(""); setResetError(""); setResetSuccess(false); } }}>
+          <DialogTrigger render={<button className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold text-rose-600 hover:text-rose-700 hover:bg-rose-50 border border-rose-200/50 shadow-2xs transition-all cursor-pointer" />}>
+            <Trash2 className="w-3.5 h-3.5 text-rose-500 shrink-0" />
+            <span className="truncate font-semibold">Reset Semua Data</span>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-md bg-white border border-slate-200/80 rounded-2xl shadow-xl p-6">
+            <DialogHeader className="space-y-1.5">
+              <DialogTitle className="text-base font-bold text-rose-600 flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5 text-rose-600 animate-pulse" />
+                Hapus & Reset Semua Data?
+              </DialogTitle>
+              <DialogDescription className="text-xs text-slate-500 leading-relaxed">
+                Tindakan ini tidak dapat dibatalkan. Seluruh data kesiswaan, kepegawaian, pembelajaran, PKKS, dan identitas sekolah akan dihapus secara permanen.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4 pt-4">
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[11px] font-semibold text-slate-600">
+                  Ketik <span className="font-bold text-rose-600 font-mono">RESET</span> di bawah untuk mengonfirmasi:
+                </label>
+                <input
+                  type="text"
+                  value={resetConfirmText}
+                  onChange={(e) => setResetConfirmText(e.target.value)}
+                  placeholder="RESET"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-rose-500 font-mono"
+                  disabled={resetting || resetSuccess}
+                />
+              </div>
+
+              {resetError && (
+                <div className="text-[10px] text-rose-600 bg-rose-50 border border-rose-100 rounded-lg p-2.5 flex items-center gap-1.5">
+                  <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                  <span>{resetError}</span>
+                </div>
+              )}
+
+              {resetSuccess && (
+                <div className="text-[10px] text-emerald-600 bg-emerald-50 border border-emerald-100 rounded-lg p-2.5 flex items-center gap-1.5">
+                  <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                  <span>Data berhasil di-reset! Memuat ulang halaman...</span>
+                </div>
+              )}
+
+              <div className="flex gap-2.5 pt-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setOpenReset(false)}
+                  className="flex-1 text-xs h-9 rounded-lg"
+                  disabled={resetting || resetSuccess}
+                >
+                  Batal
+                </Button>
+                <Button
+                  type="button"
+                  onClick={handleReset}
+                  disabled={resetConfirmText !== "RESET" || resetting || resetSuccess}
+                  className="flex-1 bg-rose-600 hover:bg-rose-700 disabled:bg-rose-300 text-white text-xs font-semibold h-9 rounded-lg shadow-2xs flex items-center justify-center gap-1.5 active:scale-97 transition-transform cursor-pointer"
+                >
+                  {resetting ? "Mereset..." : "Ya, Reset Semua"}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
         <Dialog open={openBackup} onOpenChange={setOpenBackup}>
           <DialogTrigger render={<button className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold text-slate-500 hover:text-slate-900 hover:bg-slate-100/70 border border-slate-200/50 shadow-2xs transition-all cursor-pointer" />}>
             <Database className="w-3.5 h-3.5 text-slate-400 shrink-0" />

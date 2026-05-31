@@ -94,7 +94,7 @@ export default function Dashboard() {
   ];
 
   return (
-    <div className="flex-1 p-8">
+    <div className="flex-1 p-4 md:p-8">
       <div className="max-w-6xl mx-auto space-y-8">
         <header>
           <motion.div
@@ -123,11 +123,11 @@ export default function Dashboard() {
               <motion.div
                 key={index}
                 variants={itemVariants}
-                whileHover={{ y: -4, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01)" }}
+                whileHover={{ y: -4 }}
                 whileTap={{ scale: 0.98 }}
-                className="transition-shadow duration-300 rounded-xl bg-white"
+                className="h-full"
               >
-                <Card className="border-slate-200/60 shadow-sm h-full bg-transparent">
+                <Card className="h-full">
                   <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
                     <CardTitle className="text-sm font-medium text-slate-600">
                       {item.title}

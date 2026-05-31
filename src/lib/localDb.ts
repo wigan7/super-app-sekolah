@@ -213,6 +213,12 @@ export const getDataKesiswaan = async () => {
 export const addDataKesiswaan = async (newData: Record<string, JsonValue>) => {
   return appendDatasetRow('kesiswaan', 'induk', newData);
 };
+export const overwriteDataKesiswaan = async (newDataList: Record<string, JsonValue>[]) => {
+  const schoolData = await getSchoolData();
+  schoolData.kesiswaan.induk = newDataList;
+  await writeSchoolData(schoolData);
+  return newDataList;
+};
 
 // Kepegawaian
 export const getDataKepegawaian = async () => {
@@ -246,3 +252,9 @@ export const updateIdentitas = async (newData: Partial<SchoolData['identitas']>)
   await writeSchoolData(schoolData);
   return schoolData.identitas;
 };
+
+export const resetSchoolData = async () => {
+  await writeSchoolData(DEFAULT_SCHOOL_DATA);
+  return DEFAULT_SCHOOL_DATA;
+};
+

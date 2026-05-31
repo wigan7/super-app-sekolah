@@ -21,7 +21,7 @@ export default function KepegawaianPage() {
 
   return (
     <div className="flex-1 overflow-y-auto bg-slate-50/50">
-      <div className="max-w-7xl mx-auto p-8 space-y-8">
+      <div className="max-w-7xl mx-auto p-4 md:p-8 space-y-8">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">Kepegawaian</h1>
           <p className="text-slate-500 mt-1 text-sm">
