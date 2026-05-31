@@ -10,8 +10,18 @@ echo.
 echo ===================================================
 echo Menyiapkan Folder Portable...
 echo ===================================================
+REM Amankan node.exe jika sudah ada agar tidak perlu download ulang
+if exist super-app-portable\node.exe (
+    echo Menemukan node.exe, mengamankan sementara...
+    move /Y super-app-portable\node.exe .\node_temp.exe >nul
+)
+
 rmdir /s /q super-app-portable 2>nul
 mkdir super-app-portable
+
+if exist .\node_temp.exe (
+    move /Y .\node_temp.exe super-app-portable\node.exe >nul
+)
 
 echo Menyalin file standalone...
 xcopy /E /I /H /Y .next\standalone super-app-portable\
@@ -26,9 +36,14 @@ xcopy /E /I /H /Y .next\static super-app-portable\.next\static\
 
 echo.
 echo ===================================================
-echo Mengunduh Node.js Portable...
+echo Memeriksa/Mengunduh Node.js Portable...
 echo ===================================================
-curl -# -Lo super-app-portable\node.exe https://nodejs.org/dist/v20.12.0/win-x64/node.exe
+if not exist super-app-portable\node.exe (
+    echo Mengunduh Node.js Portable...
+    curl -# -Lo super-app-portable\node.exe https://nodejs.org/dist/v20.12.0/win-x64/node.exe
+) else (
+    echo Node.js Portable sudah ada. Pengunduhan dilewati!
+)
 
 echo.
 echo ===================================================
@@ -55,6 +70,13 @@ echo start http://localhost:%%PORT%%
 echo node.exe server.js
 echo pause
 ) > "super-app-portable\Jalankan Aplikasi.bat"
+
+echo.
+echo ===================================================
+echo Membersihkan Folder Build Sementara (.next)...
+echo ===================================================
+rmdir /s /q .next 2>nul
+del /f /q .\node_temp.exe 2>nul
 
 echo.
 echo ===================================================
