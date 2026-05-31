@@ -29,7 +29,36 @@ REM Bersihkan spasi/tanda kutip jika ada
 set TARGET_DIR=%TARGET_DIR:"=%
 
 echo.
-echo Aplikasi akan diinstal ke: %TARGET_DIR%
+echo Memverifikasi folder tujuan eksternal: %TARGET_DIR%
+echo.
+
+REM Cek apakah folder tujuan bisa dibuat/ditulis (LAKUKAN SEBELUM BUILD UNTUK MENCEGAH BLOAT!)
+mkdir "%TARGET_DIR%" 2>nul
+if not exist "%TARGET_DIR%" (
+    echo.
+    echo [ERROR] Gagal membuat folder tujuan: %TARGET_DIR%
+    echo Harap jalankan script ini sebagai Administrator (Klik kanan -> Run as Administrator)
+    echo atau pilih lokasi folder lainnya.
+    echo.
+    pause
+    exit /b 1
+)
+
+REM Tes kemampuan menulis file di folder tujuan
+echo. > "%TARGET_DIR%\perm_test.txt" 2>nul
+if not exist "%TARGET_DIR%\perm_test.txt" (
+    echo.
+    echo [ERROR] Gagal menulis ke folder tujuan: %TARGET_DIR%
+    echo Anda tidak memiliki izin menulis di folder ini.
+    echo Harap jalankan script ini sebagai Administrator (Klik kanan -> Run as Administrator)
+    echo atau pilih lokasi folder lainnya.
+    echo.
+    pause
+    exit /b 1
+)
+del /f /q "%TARGET_DIR%\perm_test.txt" 2>nul
+
+echo Folder tujuan terverifikasi! Memulai proses build...
 echo.
 
 REM Lakukan Next.js build
@@ -39,6 +68,9 @@ call npx next build --webpack
 if errorlevel 1 (
     echo.
     echo [ERROR] Gagal melakukan build Next.js. Silakan periksa error di atas.
+    echo.
+    REM Bersihkan sisa build jika gagal demi menjaga kebersihan folder
+    rmdir /s /q .next 2>nul
     pause
     exit /b 1
 )
@@ -48,17 +80,6 @@ echo ===================================================
 echo Menyiapkan Folder Instalasi...
 echo ===================================================
 
-REM Cek apakah folder tujuan memerlukan akses admin dan bisa ditulis
-mkdir "%TARGET_DIR%" 2>nul
-if not exist "%TARGET_DIR%" (
-    echo.
-    echo [ERROR] Gagal membuat folder tujuan: %TARGET_DIR%
-    echo Harap jalankan script ini sebagai Administrator (Klik kanan -> Run as Administrator)
-    echo atau pilih lokasi folder lainnya.
-    pause
-    exit /b 1
-)
-
 REM Amankan node.exe jika sudah ada di folder tujuan agar tidak perlu download ulang
 if exist "%TARGET_DIR%\node.exe" (
     echo Menemukan node.exe di folder tujuan, mengamankan sementara...
@@ -67,13 +88,11 @@ if exist "%TARGET_DIR%\node.exe" (
 
 REM Bersihkan folder tujuan (kecuali subfolder data jika ada agar data sekolah tidak hilang!)
 echo Membersihkan file lama di folder instalasi...
-if exist "%TARGET_DIR%" (
-    for /d %%p in ("%TARGET_DIR%\*") do (
-        if /i not "%%~nxp"=="data" rmdir /s /q "%%p"
-    )
-    for %%f in ("%TARGET_DIR%\*") do (
-        if /i not "%%~nxf"=="node.exe" del /q "%%f"
-    )
+for /d %%p in ("%TARGET_DIR%\*") do (
+    if /i not "%%~nxp"=="data" rmdir /s /q "%%p"
+)
+for %%f in ("%TARGET_DIR%\*") do (
+    if /i not "%%~nxf"=="node.exe" del /q "%%f"
 )
 
 if exist .\node_temp.exe (
