@@ -1,23 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -140,159 +124,173 @@ export function PengembanganPrestasiTab() {
   };
 
   return (
-    <div className="space-y-4">
-      <div>
-        <h2 className="text-lg font-semibold text-slate-900">
-          Pengembangan & Prestasi Guru
+    <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in duration-500 ease-out pb-12">
+      <div className="flex flex-col gap-1 px-4 lg:px-0 pt-4">
+        <h2 className="text-[34px] font-bold tracking-tight text-slate-900 leading-tight">
+          Pengembangan & Prestasi
         </h2>
-        <p className="text-sm text-slate-500">
-          Riwayat diklat, penataran, seminar, dan penghargaan yang diperoleh.
+        <p className="text-[15px] text-slate-500">
+          Kelola riwayat diklat, penataran, seminar, dan penghargaan.
         </p>
       </div>
 
-      <Accordion className="w-full space-y-4" defaultValue={["diklat"]}>
-        <AccordionItem value="diklat" className="border border-slate-200 rounded-xl bg-white px-4 shadow-sm">
-          <AccordionTrigger className="hover:no-underline font-medium text-slate-900 py-4">
-            Buku Diklat/Penataran & Seminar
-          </AccordionTrigger>
-          <AccordionContent className="pb-4 space-y-3">
-            <Dialog open={openDiklat} onOpenChange={setOpenDiklat}>
-              <DialogTrigger render={<Button className="bg-slate-900 text-white hover:bg-slate-800" />}>
-                <Plus className="h-4 w-4 mr-2" /> Tambah Diklat
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Input Diklat/Seminar</DialogTitle>
-                  <DialogDescription>Simpan riwayat pengembangan guru.</DialogDescription>
-                </DialogHeader>
-                <div className="grid gap-3">
-                  <div className="grid gap-2"><Label htmlFor="dnama">Nama</Label><Input id="dnama" value={diklatForm.nama} onChange={(e) => setDiklatForm((prev) => ({ ...prev, nama: e.target.value }))} /></div>
-                  <div className="grid gap-2"><Label htmlFor="ddiklat">Nama Diklat/Seminar</Label><Input id="ddiklat" value={diklatForm.diklat} onChange={(e) => setDiklatForm((prev) => ({ ...prev, diklat: e.target.value }))} /></div>
-                  <div className="grid gap-2"><Label htmlFor="dpenyelenggara">Penyelenggara</Label><Input id="dpenyelenggara" value={diklatForm.penyelenggara} onChange={(e) => setDiklatForm((prev) => ({ ...prev, penyelenggara: e.target.value }))} /></div>
-                  <div className="grid grid-cols-3 gap-3">
-                    <div className="grid gap-2"><Label htmlFor="dtingkat">Tingkat</Label><Input id="dtingkat" value={diklatForm.tingkat} onChange={(e) => setDiklatForm((prev) => ({ ...prev, tingkat: e.target.value }))} /></div>
-                    <div className="grid gap-2"><Label htmlFor="dtahun">Tahun</Label><Input id="dtahun" value={diklatForm.tahun} onChange={(e) => setDiklatForm((prev) => ({ ...prev, tahun: e.target.value }))} /></div>
-                    <div className="grid gap-2"><Label htmlFor="dlama">Lama (Jam)</Label><Input id="dlama" value={diklatForm.lama} onChange={(e) => setDiklatForm((prev) => ({ ...prev, lama: e.target.value }))} /></div>
+      {/* Diklat Section */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between px-4 lg:px-2">
+          <h3 className="text-[13px] uppercase tracking-wide text-slate-500 font-medium">
+            Diklat & Seminar
+          </h3>
+          <Dialog open={openDiklat} onOpenChange={setOpenDiklat}>
+            <DialogTrigger render={<button className="text-primary text-[15px] font-medium active:opacity-60 transition-opacity" />}>
+              Tambah
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[400px] rounded-[32px] ios-glass p-0 border-0 shadow-2xl overflow-hidden">
+              <DialogHeader className="px-4 py-4 border-b border-slate-200/60 bg-white/50 text-center">
+                <DialogTitle className="text-[17px] font-semibold tracking-tight text-slate-900 text-center w-full">Input Diklat/Seminar</DialogTitle>
+                <DialogDescription className="hidden">Simpan riwayat pengembangan</DialogDescription>
+              </DialogHeader>
+              <div className="bg-background/50 p-4">
+                <div className="bg-white rounded-xl overflow-hidden border border-slate-200/60">
+                  <div className="flex items-center px-4 py-3 border-b border-slate-200/60 ml-4 pl-0">
+                    <Label htmlFor="dnama" className="w-1/3 text-[15px] text-slate-900 font-normal">Nama</Label>
+                    <Input id="dnama" className="w-2/3 border-0 bg-transparent p-0 text-[15px] text-right focus-visible:ring-0 shadow-none rounded-none h-auto" placeholder="Masukkan nama" value={diklatForm.nama} onChange={(e) => setDiklatForm((prev) => ({ ...prev, nama: e.target.value }))} />
+                  </div>
+                  <div className="flex items-center px-4 py-3 border-b border-slate-200/60 ml-4 pl-0">
+                    <Label htmlFor="ddiklat" className="w-1/3 text-[15px] text-slate-900 font-normal">Diklat</Label>
+                    <Input id="ddiklat" className="w-2/3 border-0 bg-transparent p-0 text-[15px] text-right focus-visible:ring-0 shadow-none rounded-none h-auto" placeholder="Nama diklat" value={diklatForm.diklat} onChange={(e) => setDiklatForm((prev) => ({ ...prev, diklat: e.target.value }))} />
+                  </div>
+                  <div className="flex items-center px-4 py-3 border-b border-slate-200/60 ml-4 pl-0">
+                    <Label htmlFor="dpenyelenggara" className="w-1/3 text-[15px] text-slate-900 font-normal">Penyelenggara</Label>
+                    <Input id="dpenyelenggara" className="w-2/3 border-0 bg-transparent p-0 text-[15px] text-right focus-visible:ring-0 shadow-none rounded-none h-auto" placeholder="Instansi" value={diklatForm.penyelenggara} onChange={(e) => setDiklatForm((prev) => ({ ...prev, penyelenggara: e.target.value }))} />
+                  </div>
+                  <div className="flex items-center px-4 py-3 border-b border-slate-200/60 ml-4 pl-0">
+                    <Label htmlFor="dtingkat" className="w-1/3 text-[15px] text-slate-900 font-normal">Tingkat</Label>
+                    <Input id="dtingkat" className="w-2/3 border-0 bg-transparent p-0 text-[15px] text-right focus-visible:ring-0 shadow-none rounded-none h-auto" placeholder="Nasional" value={diklatForm.tingkat} onChange={(e) => setDiklatForm((prev) => ({ ...prev, tingkat: e.target.value }))} />
+                  </div>
+                  <div className="flex items-center px-4 py-3 border-b border-slate-200/60 ml-4 pl-0">
+                    <Label htmlFor="dtahun" className="w-1/3 text-[15px] text-slate-900 font-normal">Tahun</Label>
+                    <Input id="dtahun" className="w-2/3 border-0 bg-transparent p-0 text-[15px] text-right focus-visible:ring-0 shadow-none rounded-none h-auto" placeholder="Tahun" value={diklatForm.tahun} onChange={(e) => setDiklatForm((prev) => ({ ...prev, tahun: e.target.value }))} />
+                  </div>
+                  <div className="flex items-center px-4 py-3">
+                    <Label htmlFor="dlama" className="w-1/3 text-[15px] text-slate-900 font-normal">Lama (Jam)</Label>
+                    <Input id="dlama" className="w-2/3 border-0 bg-transparent p-0 text-[15px] text-right focus-visible:ring-0 shadow-none rounded-none h-auto" placeholder="Total JP" value={diklatForm.lama} onChange={(e) => setDiklatForm((prev) => ({ ...prev, lama: e.target.value }))} />
                   </div>
                 </div>
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => setOpenDiklat(false)}>Batal</Button>
-                  <Button onClick={saveDiklat}>Simpan</Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
+              </div>
+              <DialogFooter className="px-4 py-3 border-t border-slate-200/60 bg-white/50 flex flex-row gap-2 sm:justify-between">
+                <Button variant="ghost" className="flex-1 rounded-xl text-slate-900 text-[15px] hover:bg-slate-200/50" onClick={() => setOpenDiklat(false)}>Batal</Button>
+                <Button className="flex-1 rounded-xl bg-primary text-white text-[15px] font-semibold hover:bg-primary/90" onClick={saveDiklat}>Simpan</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
 
-            <div className="rounded-lg border border-slate-100 overflow-hidden">
-              <Table>
-                <TableHeader className="bg-slate-50/50">
-                  <TableRow>
-                    <TableHead>Nama</TableHead>
-                    <TableHead>Nama Penataran/Seminar</TableHead>
-                    <TableHead>Penyelenggara</TableHead>
-                    <TableHead>Tingkat</TableHead>
-                    <TableHead>Tahun</TableHead>
-                    <TableHead>Lama (Jam)</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {diklatRows.length === 0 ? (
-                    <TableRow><TableCell colSpan={6} className="h-24 text-center text-slate-500">Belum ada data diklat.</TableCell></TableRow>
-                  ) : (
-                    diklatRows.map((item, index) => (
-                      <motion.tr
-                        key={item.id}
-                        variants={itemVariants}
-                        initial="hidden"
-                        animate="show"
-                        transition={{ delay: index * 0.05 }}
-                        className="border-b transition-colors hover:bg-slate-50"
-                      >
-                        <TableCell className="font-medium text-slate-900">{item.nama}</TableCell>
-                        <TableCell className="text-slate-600">{item.diklat}</TableCell>
-                        <TableCell className="text-slate-600">{item.penyelenggara}</TableCell>
-                        <TableCell className="text-slate-600">{item.tingkat}</TableCell>
-                        <TableCell className="text-slate-600">{item.tahun}</TableCell>
-                        <TableCell className="text-slate-600">{item.lama}</TableCell>
-                      </motion.tr>
-                    ))
+        <div className="mx-0 lg:mx-0 bg-white rounded-2xl border border-slate-200/60 overflow-hidden shadow-sm squircle-lg">
+          {diklatRows.length === 0 ? (
+            <div className="p-8 text-center text-[15px] text-slate-500">Belum ada data diklat.</div>
+          ) : (
+            <div className="flex flex-col">
+              {diklatRows.map((item, index) => (
+                <div key={item.id} className="group flex flex-col relative">
+                  <div className="flex items-start justify-between p-4 bg-white hover:bg-slate-50/50 transition-colors">
+                    <div className="flex flex-col gap-1 pr-4 min-w-0">
+                      <span className="text-[17px] font-medium text-slate-900 truncate">{item.diklat}</span>
+                      <span className="text-[15px] text-slate-500 truncate">{item.nama} • {item.penyelenggara}</span>
+                    </div>
+                    <div className="flex flex-col items-end gap-1 shrink-0">
+                      <span className="text-[15px] text-slate-500">{item.tahun}</span>
+                      <span className="text-[13px] font-medium text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">{item.lama} Jam</span>
+                    </div>
+                  </div>
+                  {/* iOS Style Separator */}
+                  {index !== diklatRows.length - 1 && (
+                    <div className="h-[1px] bg-slate-200/60 ml-4"></div>
                   )}
-                </TableBody>
-              </Table>
+                </div>
+              ))}
             </div>
-          </AccordionContent>
-        </AccordionItem>
+          )}
+        </div>
+      </div>
 
-        <AccordionItem value="penghargaan" className="border border-slate-200 rounded-xl bg-white px-4 shadow-sm">
-          <AccordionTrigger className="hover:no-underline font-medium text-slate-900 py-4">
-            Buku Penghargaan
-          </AccordionTrigger>
-          <AccordionContent className="pb-4 space-y-3">
-            <Dialog open={openPenghargaan} onOpenChange={setOpenPenghargaan}>
-              <DialogTrigger render={<Button className="bg-slate-900 text-white hover:bg-slate-800" />}>
-                <Plus className="h-4 w-4 mr-2" /> Tambah Penghargaan
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Input Penghargaan</DialogTitle>
-                  <DialogDescription>Simpan data penghargaan guru.</DialogDescription>
-                </DialogHeader>
-                <div className="grid gap-3">
-                  <div className="grid gap-2"><Label htmlFor="pnama">Nama</Label><Input id="pnama" value={penghargaanForm.nama} onChange={(e) => setPenghargaanForm((prev) => ({ ...prev, nama: e.target.value }))} /></div>
-                  <div className="grid gap-2"><Label htmlFor="ppenghargaan">Nama Penghargaan</Label><Input id="ppenghargaan" value={penghargaanForm.penghargaan} onChange={(e) => setPenghargaanForm((prev) => ({ ...prev, penghargaan: e.target.value }))} /></div>
-                  <div className="grid gap-2"><Label htmlFor="pinstansi">Instansi Pemberi</Label><Input id="pinstansi" value={penghargaanForm.instansi} onChange={(e) => setPenghargaanForm((prev) => ({ ...prev, instansi: e.target.value }))} /></div>
-                  <div className="grid grid-cols-3 gap-3">
-                    <div className="grid gap-2"><Label htmlFor="ptingkat">Tingkat</Label><Input id="ptingkat" value={penghargaanForm.tingkat} onChange={(e) => setPenghargaanForm((prev) => ({ ...prev, tingkat: e.target.value }))} /></div>
-                    <div className="grid gap-2"><Label htmlFor="pnomor">Nomor</Label><Input id="pnomor" value={penghargaanForm.nomor} onChange={(e) => setPenghargaanForm((prev) => ({ ...prev, nomor: e.target.value }))} /></div>
-                    <div className="grid gap-2"><Label htmlFor="ptahun">Tahun</Label><Input id="ptahun" value={penghargaanForm.tahun} onChange={(e) => setPenghargaanForm((prev) => ({ ...prev, tahun: e.target.value }))} /></div>
+      {/* Penghargaan Section */}
+      <div className="space-y-2 pt-4">
+        <div className="flex items-center justify-between px-4 lg:px-2">
+          <h3 className="text-[13px] uppercase tracking-wide text-slate-500 font-medium">
+            Penghargaan
+          </h3>
+          <Dialog open={openPenghargaan} onOpenChange={setOpenPenghargaan}>
+            <DialogTrigger render={<button className="text-primary text-[15px] font-medium active:opacity-60 transition-opacity" />}>
+              Tambah
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[400px] rounded-[32px] ios-glass p-0 border-0 shadow-2xl overflow-hidden">
+              <DialogHeader className="px-4 py-4 border-b border-slate-200/60 bg-white/50 text-center">
+                <DialogTitle className="text-[17px] font-semibold tracking-tight text-slate-900 text-center w-full">Input Penghargaan</DialogTitle>
+                <DialogDescription className="hidden">Simpan data penghargaan</DialogDescription>
+              </DialogHeader>
+              <div className="bg-background/50 p-4">
+                <div className="bg-white rounded-xl overflow-hidden border border-slate-200/60">
+                  <div className="flex items-center px-4 py-3 border-b border-slate-200/60 ml-4 pl-0">
+                    <Label htmlFor="pnama" className="w-1/3 text-[15px] text-slate-900 font-normal">Nama</Label>
+                    <Input id="pnama" className="w-2/3 border-0 bg-transparent p-0 text-[15px] text-right focus-visible:ring-0 shadow-none rounded-none h-auto" placeholder="Masukkan nama" value={penghargaanForm.nama} onChange={(e) => setPenghargaanForm((prev) => ({ ...prev, nama: e.target.value }))} />
+                  </div>
+                  <div className="flex items-center px-4 py-3 border-b border-slate-200/60 ml-4 pl-0">
+                    <Label htmlFor="ppenghargaan" className="w-1/3 text-[15px] text-slate-900 font-normal">Penghargaan</Label>
+                    <Input id="ppenghargaan" className="w-2/3 border-0 bg-transparent p-0 text-[15px] text-right focus-visible:ring-0 shadow-none rounded-none h-auto" placeholder="Nama penghargaan" value={penghargaanForm.penghargaan} onChange={(e) => setPenghargaanForm((prev) => ({ ...prev, penghargaan: e.target.value }))} />
+                  </div>
+                  <div className="flex items-center px-4 py-3 border-b border-slate-200/60 ml-4 pl-0">
+                    <Label htmlFor="pinstansi" className="w-1/3 text-[15px] text-slate-900 font-normal">Instansi</Label>
+                    <Input id="pinstansi" className="w-2/3 border-0 bg-transparent p-0 text-[15px] text-right focus-visible:ring-0 shadow-none rounded-none h-auto" placeholder="Pemberi penghargaan" value={penghargaanForm.instansi} onChange={(e) => setPenghargaanForm((prev) => ({ ...prev, instansi: e.target.value }))} />
+                  </div>
+                  <div className="flex items-center px-4 py-3 border-b border-slate-200/60 ml-4 pl-0">
+                    <Label htmlFor="ptingkat" className="w-1/3 text-[15px] text-slate-900 font-normal">Tingkat</Label>
+                    <Input id="ptingkat" className="w-2/3 border-0 bg-transparent p-0 text-[15px] text-right focus-visible:ring-0 shadow-none rounded-none h-auto" placeholder="Nasional" value={penghargaanForm.tingkat} onChange={(e) => setPenghargaanForm((prev) => ({ ...prev, tingkat: e.target.value }))} />
+                  </div>
+                  <div className="flex items-center px-4 py-3 border-b border-slate-200/60 ml-4 pl-0">
+                    <Label htmlFor="pnomor" className="w-1/3 text-[15px] text-slate-900 font-normal">Nomor</Label>
+                    <Input id="pnomor" className="w-2/3 border-0 bg-transparent p-0 text-[15px] text-right focus-visible:ring-0 shadow-none rounded-none h-auto" placeholder="Nomor SK" value={penghargaanForm.nomor} onChange={(e) => setPenghargaanForm((prev) => ({ ...prev, nomor: e.target.value }))} />
+                  </div>
+                  <div className="flex items-center px-4 py-3">
+                    <Label htmlFor="ptahun" className="w-1/3 text-[15px] text-slate-900 font-normal">Tahun</Label>
+                    <Input id="ptahun" className="w-2/3 border-0 bg-transparent p-0 text-[15px] text-right focus-visible:ring-0 shadow-none rounded-none h-auto" placeholder="Tahun perolehan" value={penghargaanForm.tahun} onChange={(e) => setPenghargaanForm((prev) => ({ ...prev, tahun: e.target.value }))} />
                   </div>
                 </div>
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => setOpenPenghargaan(false)}>Batal</Button>
-                  <Button onClick={savePenghargaan}>Simpan</Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
+              </div>
+              <DialogFooter className="px-4 py-3 border-t border-slate-200/60 bg-white/50 flex flex-row gap-2 sm:justify-between">
+                <Button variant="ghost" className="flex-1 rounded-xl text-slate-900 text-[15px] hover:bg-slate-200/50" onClick={() => setOpenPenghargaan(false)}>Batal</Button>
+                <Button className="flex-1 rounded-xl bg-primary text-white text-[15px] font-semibold hover:bg-primary/90" onClick={savePenghargaan}>Simpan</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
 
-            <div className="rounded-lg border border-slate-100 overflow-hidden">
-              <Table>
-                <TableHeader className="bg-slate-50/50">
-                  <TableRow>
-                    <TableHead>Nama Guru</TableHead>
-                    <TableHead>Nama Penghargaan</TableHead>
-                    <TableHead>Tingkat</TableHead>
-                    <TableHead>Instansi Pemberi</TableHead>
-                    <TableHead>Nomor</TableHead>
-                    <TableHead>Tahun</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {penghargaanRows.length === 0 ? (
-                    <TableRow><TableCell colSpan={6} className="h-24 text-center text-slate-500">Belum ada data penghargaan.</TableCell></TableRow>
-                  ) : (
-                    penghargaanRows.map((item, index) => (
-                      <motion.tr
-                        key={item.id}
-                        variants={itemVariants}
-                        initial="hidden"
-                        animate="show"
-                        transition={{ delay: index * 0.05 }}
-                        className="border-b transition-colors hover:bg-slate-50"
-                      >
-                        <TableCell className="font-medium text-slate-900">{item.nama}</TableCell>
-                        <TableCell className="text-slate-600">{item.penghargaan}</TableCell>
-                        <TableCell className="text-slate-600">{item.tingkat}</TableCell>
-                        <TableCell className="text-slate-600">{item.instansi}</TableCell>
-                        <TableCell className="text-slate-600">{item.nomor}</TableCell>
-                        <TableCell className="text-slate-600">{item.tahun}</TableCell>
-                      </motion.tr>
-                    ))
+        <div className="mx-0 lg:mx-0 bg-white rounded-2xl border border-slate-200/60 overflow-hidden shadow-sm squircle-lg">
+          {penghargaanRows.length === 0 ? (
+            <div className="p-8 text-center text-[15px] text-slate-500">Belum ada data penghargaan.</div>
+          ) : (
+            <div className="flex flex-col">
+              {penghargaanRows.map((item, index) => (
+                <div key={item.id} className="group flex flex-col relative">
+                  <div className="flex items-start justify-between p-4 bg-white hover:bg-slate-50/50 transition-colors">
+                    <div className="flex flex-col gap-1 pr-4 min-w-0">
+                      <span className="text-[17px] font-medium text-slate-900 truncate">{item.penghargaan}</span>
+                      <span className="text-[15px] text-slate-500 truncate">{item.nama} • {item.instansi}</span>
+                    </div>
+                    <div className="flex flex-col items-end gap-1 shrink-0">
+                      <span className="text-[15px] text-slate-500">{item.tahun}</span>
+                      <span className="text-[13px] font-medium text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">{item.tingkat}</span>
+                    </div>
+                  </div>
+                  {/* iOS Style Separator */}
+                  {index !== penghargaanRows.length - 1 && (
+                    <div className="h-[1px] bg-slate-200/60 ml-4"></div>
                   )}
-                </TableBody>
-              </Table>
+                </div>
+              ))}
             </div>
-          </AccordionContent>
-        </AccordionItem>
-      </Accordion>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

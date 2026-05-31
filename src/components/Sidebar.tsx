@@ -164,7 +164,7 @@ export function Sidebar() {
   };
 
   return (
-    <aside className="w-64 border-r border-slate-200 bg-white h-screen sticky top-0 flex flex-col">
+    <aside className="w-64 border-r border-slate-200/60 ios-glass h-screen sticky top-0 flex flex-col z-40">
       <div className="p-6">
         <h1 className="text-xl font-bold tracking-tight text-slate-900">
           Super App Sekolah
@@ -179,14 +179,14 @@ export function Sidebar() {
             <Link
               key={item.href}
               href={item.href}
-              className={`relative flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors ${
-                isActive ? "text-slate-900" : "text-slate-600 hover:text-slate-900"
+              className={`relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${
+                isActive ? "text-primary font-semibold" : "text-slate-600 hover:text-slate-900"
               }`}
             >
               {isActive && (
                 <motion.div
                   layoutId="sidebar-active-indicator"
-                  className="absolute inset-0 bg-slate-100 rounded-md"
+                  className="absolute inset-0 bg-primary/10 rounded-xl"
                   initial={false}
                   transition={{
                     type: "spring",
@@ -202,14 +202,14 @@ export function Sidebar() {
         })}
       </nav>
       {/* Backup & Restore Data Trigger */}
-      <div className="px-4 py-2 border-t border-slate-100/80 bg-slate-50/20 flex flex-col gap-2">
+      <div className="px-4 py-2 border-t border-slate-200/60 flex flex-col gap-2">
         {/* Reset All Data Trigger */}
         <Dialog open={openReset} onOpenChange={(val) => { setOpenReset(val); if(!val) { setResetConfirmText(""); setResetError(""); setResetSuccess(false); } }}>
-          <DialogTrigger render={<button className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold text-rose-600 hover:text-rose-700 hover:bg-rose-50 border border-rose-200/50 shadow-2xs transition-all cursor-pointer" />}>
-            <Trash2 className="w-3.5 h-3.5 text-rose-500 shrink-0" />
-            <span className="truncate font-semibold">Reset Semua Data</span>
+          <DialogTrigger render={<button className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-rose-600 hover:text-rose-700 hover:bg-rose-50 border border-transparent transition-all cursor-pointer" />}>
+            <Trash2 className="w-4 h-4 text-rose-500 shrink-0" />
+            <span className="truncate">Reset Semua Data</span>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-md bg-white border border-slate-200/80 rounded-2xl shadow-xl p-6">
+          <DialogContent className="sm:max-w-md rounded-[32px] ios-glass border border-slate-200/60 p-6">
             <DialogHeader className="space-y-1.5">
               <DialogTitle className="text-base font-bold text-rose-600 flex items-center gap-2">
                 <AlertTriangle className="w-5 h-5 text-rose-600 animate-pulse" />
@@ -230,20 +230,20 @@ export function Sidebar() {
                   value={resetConfirmText}
                   onChange={(e) => setResetConfirmText(e.target.value)}
                   placeholder="RESET"
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-rose-500 font-mono"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm bg-white/50 text-slate-900 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-rose-500 font-mono"
                   disabled={resetting || resetSuccess}
                 />
               </div>
 
               {resetError && (
-                <div className="text-[10px] text-rose-600 bg-rose-50 border border-rose-100 rounded-lg p-2.5 flex items-center gap-1.5">
+                <div className="text-[10px] text-rose-600 bg-rose-50 border border-rose-100 rounded-xl p-2.5 flex items-center gap-1.5">
                   <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
                   <span>{resetError}</span>
                 </div>
               )}
 
               {resetSuccess && (
-                <div className="text-[10px] text-emerald-600 bg-emerald-50 border border-emerald-100 rounded-lg p-2.5 flex items-center gap-1.5">
+                <div className="text-[10px] text-emerald-600 bg-emerald-50 border border-emerald-100 rounded-xl p-2.5 flex items-center gap-1.5">
                   <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
                   <span>Data berhasil di-reset! Memuat ulang halaman...</span>
                 </div>
@@ -254,7 +254,7 @@ export function Sidebar() {
                   type="button"
                   variant="outline"
                   onClick={() => setOpenReset(false)}
-                  className="flex-1 text-xs h-9 rounded-lg"
+                  className="flex-1 text-xs h-10 rounded-xl border-slate-200"
                   disabled={resetting || resetSuccess}
                 >
                   Batal
@@ -263,7 +263,7 @@ export function Sidebar() {
                   type="button"
                   onClick={handleReset}
                   disabled={resetConfirmText !== "RESET" || resetting || resetSuccess}
-                  className="flex-1 bg-rose-600 hover:bg-rose-700 disabled:bg-rose-300 text-white text-xs font-semibold h-9 rounded-lg shadow-2xs flex items-center justify-center gap-1.5 active:scale-97 transition-transform cursor-pointer"
+                  className="flex-1 bg-rose-600 hover:bg-rose-700 disabled:bg-rose-300 text-white text-xs font-semibold h-10 rounded-xl flex items-center justify-center gap-1.5 active:scale-95 transition-transform cursor-pointer"
                 >
                   {resetting ? "Mereset..." : "Ya, Reset Semua"}
                 </Button>
@@ -273,14 +273,14 @@ export function Sidebar() {
         </Dialog>
 
         <Dialog open={openBackup} onOpenChange={setOpenBackup}>
-          <DialogTrigger render={<button className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold text-slate-500 hover:text-slate-900 hover:bg-slate-100/70 border border-slate-200/50 shadow-2xs transition-all cursor-pointer" />}>
-            <Database className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-            <span className="truncate">Cadangkan / Ekspor Data</span>
+          <DialogTrigger render={<button className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-primary hover:bg-primary/10 transition-all cursor-pointer" />}>
+            <Database className="w-4 h-4 text-primary shrink-0" />
+            <span className="truncate">Cadangkan / Ekspor</span>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-md bg-white border border-slate-200/80 rounded-2xl shadow-xl p-6">
+          <DialogContent className="sm:max-w-md rounded-[32px] ios-glass border border-slate-200/60 p-6">
             <DialogHeader className="space-y-1.5">
               <DialogTitle className="text-base font-bold text-slate-900 flex items-center gap-2">
-                <Database className="w-5 h-5 text-indigo-600" />
+                <Database className="w-5 h-5 text-primary" />
                 Cadangkan & Pulihkan Data
               </DialogTitle>
               <DialogDescription className="text-xs text-slate-500 leading-relaxed">
@@ -290,22 +290,22 @@ export function Sidebar() {
 
             <div className="space-y-5 pt-4">
               {/* Export Area */}
-              <div className="bg-slate-50 border border-slate-100 rounded-xl p-4 flex flex-col gap-3">
+              <div className="bg-white/50 border border-slate-200 rounded-xl p-4 flex flex-col gap-3">
                 <div className="flex flex-col">
                   <span className="text-xs font-bold text-slate-800">1. Ekspor Data Sekolah (Backup)</span>
                   <span className="text-[10px] text-slate-400 mt-0.5">Menyimpan seluruh identitas, kesiswaan, kepegawaian, dan PKKS ke format JSON.</span>
                 </div>
                 <Button 
                   onClick={handleExport}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold h-9 rounded-lg shadow-2xs cursor-pointer flex items-center justify-center gap-2 w-full"
+                  className="bg-primary hover:bg-primary/90 text-white text-xs font-semibold h-10 rounded-xl cursor-pointer flex items-center justify-center gap-2 w-full active:scale-95 transition-all"
                 >
-                  <Download className="w-3.5 h-3.5" />
+                  <Download className="w-4 h-4" />
                   Unduh Berkas Cadangan (.json)
                 </Button>
               </div>
 
               {/* Import Area */}
-              <div className="bg-slate-50 border border-slate-100 rounded-xl p-4 flex flex-col gap-3">
+              <div className="bg-white/50 border border-slate-200 rounded-xl p-4 flex flex-col gap-3">
                 <div className="flex flex-col">
                   <span className="text-xs font-bold text-slate-800">2. Impor Data Sekolah (Restore)</span>
                   <span className="text-[10px] text-slate-400 mt-0.5">Unggah berkas cadangan (.json) untuk memulihkan seluruh data sebelumnya.</span>
@@ -319,12 +319,12 @@ export function Sidebar() {
                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                     disabled={importing}
                   />
-                  <div className={`border border-dashed rounded-lg p-4 text-center transition-colors flex flex-col items-center justify-center gap-2
+                  <div className={`border rounded-xl p-4 text-center transition-colors flex flex-col items-center justify-center gap-2
                     ${importSuccess 
-                      ? 'border-emerald-300 bg-emerald-50/30' 
+                      ? 'border-emerald-300 bg-emerald-50' 
                       : fileError 
-                        ? 'border-rose-300 bg-rose-50/30' 
-                        : 'border-slate-300 hover:border-indigo-400 bg-white'
+                        ? 'border-rose-300 bg-rose-50' 
+                        : 'border-slate-300 bg-white'
                     }`}
                   >
                     {importing ? (
@@ -332,7 +332,7 @@ export function Sidebar() {
                         <motion.div
                           animate={{ rotate: 360 }}
                           transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
-                          className="w-5 h-5 border-2 border-indigo-600 border-t-transparent rounded-full"
+                          className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full"
                         />
                         <span className="text-[10px] font-semibold text-slate-500">Sedang memproses data...</span>
                       </div>
@@ -343,8 +343,8 @@ export function Sidebar() {
                       </div>
                     ) : (
                       <>
-                        <Upload className="w-5 h-5 text-slate-400" />
-                        <span className="text-[10px] font-semibold text-slate-600">Klik untuk memilih berkas JSON backup</span>
+                        <Upload className="w-5 h-5 text-primary" />
+                        <span className="text-[10px] font-semibold text-primary">Klik untuk memilih berkas JSON backup</span>
                         <span className="text-[9px] text-slate-400">Hanya berkas valid dari aplikasi ini</span>
                       </>
                     )}
@@ -352,7 +352,7 @@ export function Sidebar() {
                 </div>
 
                 {fileError && (
-                  <div className="flex items-start gap-1.5 text-[10px] text-rose-600 bg-rose-50 border border-rose-100 rounded-lg p-2.5">
+                  <div className="flex items-start gap-1.5 text-[10px] text-rose-600 bg-rose-50 border border-rose-100 rounded-xl p-2.5">
                     <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
                     <span>{fileError}</span>
                   </div>
@@ -363,16 +363,16 @@ export function Sidebar() {
         </Dialog>
       </div>
 
-      <div className="p-4 border-t border-slate-200 mt-auto">
-        <div className="flex items-center gap-3 px-3 py-2 overflow-hidden">
-          <div className="w-8 h-8 rounded-full bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 font-semibold text-xs shrink-0 shadow-sm">
+      <div className="p-4 border-t border-slate-200/60 mt-auto">
+        <div className="flex items-center gap-3 px-3 py-2 overflow-hidden bg-white/50 rounded-xl border border-slate-200/50">
+          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs shrink-0">
             {initials}
           </div>
           <div className="flex flex-col min-w-0">
             <span className="text-xs font-semibold text-slate-800 truncate" title={namaKS}>
               {namaKS}
             </span>
-            <span className="text-[10px] text-slate-400 truncate" title={namaSekolah}>
+            <span className="text-[10px] text-slate-500 truncate" title={namaSekolah}>
               {namaSekolah}
             </span>
           </div>
