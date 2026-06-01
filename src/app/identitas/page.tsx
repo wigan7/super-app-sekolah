@@ -23,6 +23,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { getIdentitas, updateIdentitas } from "@/lib/clientDb";
 
 const INITIAL_STATE = {
   fotoKepalaSekolah: "",
@@ -91,13 +92,10 @@ export default function IdentitasPage() {
   };
 
   useEffect(() => {
-    const fetchIdentitas = async () => {
+    const fetchIdentitas = () => {
       try {
-        const res = await fetch("/api/identitas");
-        if (res.ok) {
-          const data = await res.json();
-          setForm(data || INITIAL_STATE);
-        }
+        const data = getIdentitas();
+        setForm(data || INITIAL_STATE);
       } catch (error) {
         console.error("Gagal memuat identitas:", error);
       } finally {
@@ -119,20 +117,10 @@ export default function IdentitasPage() {
     e.preventDefault();
     setSaving(true);
     try {
-      const res = await fetch("/api/identitas", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        setForm(data);
-        setShowToast(true);
-        setTimeout(() => setShowToast(false), 3000);
-      } else {
-        alert("Gagal menyimpan data identitas.");
-      }
+      updateIdentitas(form);
+      setForm(form);
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 3000);
     } catch (error) {
       console.error("Gagal menyimpan identitas:", error);
       alert("Terjadi kesalahan saat menyimpan data.");

@@ -23,6 +23,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import {
+  getDatasetRows,
+  appendDatasetRow,
+  deleteDatasetRow,
+  importDatasetRows,
+  getIdentitas
+} from "@/lib/clientDb";
 
 
 type Penilaian = {
@@ -176,25 +183,16 @@ export function DataPegawaiTab() {
     reader.readAsArrayBuffer(file);
   };
 
-  const handleImportSubmit = async () => {
+  const handleImportSubmit = () => {
     if (previewData.length === 0) return;
     setImporting(true);
     try {
-      const res = await fetch(`/api/data/kepegawaian/pegawai?mode=${importMode}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(previewData),
-      });
-
-      if (!res.ok) {
-        alert("Gagal melakukan import data.");
-        return;
-      }
+      importDatasetRows("kepegawaian", "pegawai", previewData, importMode);
 
       setImportOpen(false);
       setPreviewData([]);
       setFileName("");
-      await fetchRows();
+      fetchRows();
     } catch (err) {
       console.error(err);
       alert("Terjadi kesalahan saat mengimpor data.");
@@ -203,15 +201,10 @@ export function DataPegawaiTab() {
     }
   };
 
-  const fetchRows = async () => {
+  const fetchRows = () => {
     try {
-      const res = await fetch("/api/data/kepegawaian/pegawai");
-      if (!res.ok) {
-        return;
-      }
-
-      const data = await res.json();
-      setRows(Array.isArray(data) ? data : []);
+      const data = getDatasetRows("kepegawaian", "pegawai");
+      setRows(Array.isArray(data) ? (data as Pegawai[]) : []);
     } catch (error) {
       console.error("Gagal memuat data pegawai:", error);
     }
@@ -221,15 +214,12 @@ export function DataPegawaiTab() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchRows();
 
-    const fetchSchoolName = async () => {
+    const fetchSchoolName = () => {
       try {
-        const res = await fetch("/api/identitas");
-        if (res.ok) {
-          const data = await res.json();
-          setNamaSekolah(data?.namaSekolah || "");
-        }
+        const data = getIdentitas();
+        setNamaSekolah(data?.namaSekolah || "");
       } catch (error) {
-        console.error("Gagal memuat nama sekolah di kepegawaian:", error);
+        console.error("Gagal memuat nama sekolah di pegawai:", error);
       }
     };
     fetchSchoolName();
@@ -239,33 +229,26 @@ export function DataPegawaiTab() {
     setExpandedId((prev) => (prev === id ? null : id));
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     setSaving(true);
     try {
       const isEdit = !!editingPegawai;
-      const url = isEdit 
-        ? `/api/data/kepegawaian/pegawai?id=${editingPegawai.id}`
-        : "/api/data/kepegawaian/pegawai";
       
       const payload = isEdit
-        ? { ...form }
+        ? { ...form, id: editingPegawai.id, penilaian: editingPegawai.penilaian || [] }
         : { ...form, penilaian: [] };
 
-      const res = await fetch(url, {
-        method: isEdit ? "PUT" : "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      if (!res.ok) {
-        alert(isEdit ? "Gagal memperbarui data pegawai." : "Gagal menyimpan data pegawai.");
-        return;
+      if (isEdit) {
+        const updated = rows.map((p) => p.id === editingPegawai.id ? payload : p);
+        importDatasetRows("kepegawaian", "pegawai", updated, "overwrite");
+      } else {
+        appendDatasetRow("kepegawaian", "pegawai", payload);
       }
 
       setForm(EMPTY_FORM);
       setEditingPegawai(null);
       setOpen(false);
-      await fetchRows();
+      fetchRows();
     } catch (error) {
       console.error("Gagal menyimpan data pegawai:", error);
       alert("Terjadi kesalahan saat menyimpan data.");
@@ -274,21 +257,13 @@ export function DataPegawaiTab() {
     }
   };
 
-  const handleDelete = async (id: string, nama: string) => {
+  const handleDelete = (id: string, nama: string) => {
     if (!confirm(`Apakah Anda yakin ingin menghapus data pegawai "${nama}"?`)) {
       return;
     }
     try {
-      const res = await fetch(`/api/data/kepegawaian/pegawai?id=${id}`, {
-        method: "DELETE",
-      });
-
-      if (!res.ok) {
-        alert("Gagal menghapus data pegawai.");
-        return;
-      }
-
-      await fetchRows();
+      deleteDatasetRow("kepegawaian", "pegawai", id);
+      fetchRows();
     } catch (error) {
       console.error("Gagal menghapus pegawai:", error);
       alert("Terjadi kesalahan saat menghapus data.");

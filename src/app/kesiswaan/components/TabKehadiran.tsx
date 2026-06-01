@@ -27,6 +27,12 @@ import {
   Download, Upload, FileSpreadsheet, AlertTriangle, RefreshCw 
 } from "lucide-react";
 import * as XLSX from "xlsx";
+import {
+  getDatasetRows,
+  appendDatasetRow,
+  deleteDatasetRow,
+  importDatasetRows
+} from "@/lib/clientDb";
 
 type BulananRow = {
   id: string;
@@ -98,13 +104,10 @@ export default function TabKehadiran() {
   const [filterKelas, setFilterKelas] = useState("all");
   const [filterBulan, setFilterBulan] = useState("all");
 
-  const fetchRows = async () => {
+  const fetchRows = () => {
     try {
-      const res = await fetch("/api/data/kesiswaan/kehadiranBulanan");
-      if (res.ok) {
-        const data = await res.json();
-        setRows(Array.isArray(data) ? data : []);
-      }
+      const data = getDatasetRows("kesiswaan", "kehadiranBulanan");
+      setRows(Array.isArray(data) ? (data as BulananRow[]) : []);
     } catch (error) {
       console.error("Gagal memuat data kehadiran:", error);
     }
@@ -114,7 +117,7 @@ export default function TabKehadiran() {
     fetchRows();
   }, []);
 
-  const handleSave = async () => {
+  const handleSave = () => {
     if (!form.kelas.trim()) {
       alert("Silakan isi nama kelas!");
       return;
@@ -132,19 +135,11 @@ export default function TabKehadiran() {
         efektif: Number(form.efektif || 0),
       };
 
-      const res = await fetch("/api/data/kesiswaan/kehadiranBulanan", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      if (!res.ok) {
-        throw new Error("Gagal menyimpan data kehadiran");
-      }
+      appendDatasetRow("kesiswaan", "kehadiranBulanan", payload);
 
       setForm(EMPTY_FORM);
       setOpen(false);
-      await fetchRows();
+      fetchRows();
     } catch (error) {
       console.error(error);
       alert("Gagal menyimpan data kehadiran.");
@@ -153,21 +148,14 @@ export default function TabKehadiran() {
     }
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = (id: string) => {
     if (!confirm("Apakah Anda yakin ingin menghapus data kehadiran ini?")) {
       return;
     }
 
     try {
-      const res = await fetch(`/api/data/kesiswaan/kehadiranBulanan?id=${id}`, {
-        method: "DELETE",
-      });
-
-      if (!res.ok) {
-        throw new Error("Gagal menghapus data");
-      }
-
-      await fetchRows();
+      deleteDatasetRow("kesiswaan", "kehadiranBulanan", id);
+      fetchRows();
     } catch (error) {
       console.error(error);
       alert("Gagal menghapus data.");
@@ -326,29 +314,19 @@ export default function TabKehadiran() {
     reader.readAsArrayBuffer(file);
   };
 
-  const confirmImport = async (mode: "append" | "overwrite") => {
+  const confirmImport = (mode: "append" | "overwrite") => {
     if (!pendingImportData) return;
 
     setImporting(true);
     setShowImportModal(false);
     try {
-      const res = await fetch(`/api/data/kesiswaan/kehadiranBulanan?mode=${mode}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(pendingImportData),
-      });
-
-      if (res.ok) {
-        const result = await res.json();
-        alert(
-          mode === "overwrite"
-            ? `Sukses! Berhasil menimpa data kehadiran bulanan dengan ${result.count || pendingImportData.length} data baru.`
-            : `Sukses! Berhasil menambahkan ${result.count || pendingImportData.length} data kehadiran baru.`
-        );
-        fetchRows();
-      } else {
-        alert("Gagal mengimpor data ke database.");
-      }
+      importDatasetRows("kesiswaan", "kehadiranBulanan", pendingImportData, mode);
+      alert(
+        mode === "overwrite"
+          ? `Sukses! Berhasil menimpa data kehadiran bulanan dengan ${pendingImportData.length} data baru.`
+          : `Sukses! Berhasil menambahkan ${pendingImportData.length} data kehadiran baru.`
+      );
+      fetchRows();
     } catch (err) {
       console.error(err);
       alert("Terjadi kesalahan saat mengunggah data.");

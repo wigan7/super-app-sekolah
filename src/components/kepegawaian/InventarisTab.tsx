@@ -23,6 +23,12 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import {
+  getDatasetRows,
+  appendDatasetRow,
+  deleteDatasetRow,
+  importDatasetRows
+} from "@/lib/clientDb";
 
 type InventarisRow = {
   id: string;
@@ -51,15 +57,10 @@ export function InventarisTab() {
   const [form, setForm] = useState(EMPTY_FORM);
   const [editingId, setEditingId] = useState<string | null>(null);
 
-  const fetchRows = async () => {
+  const fetchRows = () => {
     try {
-      const res = await fetch("/api/data/kepegawaian/inventaris");
-      if (!res.ok) {
-        return;
-      }
-
-      const data = await res.json();
-      setRows(Array.isArray(data) ? data : []);
+      const data = getDatasetRows("kepegawaian", "inventaris");
+      setRows(Array.isArray(data) ? (data as InventarisRow[]) : []);
     } catch (error) {
       console.error("Gagal memuat inventaris:", error);
     }
@@ -74,46 +75,36 @@ export function InventarisTab() {
     item.nama.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const saveInventaris = async () => {
+  const saveInventaris = () => {
     const isEdit = !!editingId;
     const payload = {
       ...form,
       jumlah: Number(form.jumlah || 0),
     };
 
-    const url = isEdit 
-      ? `/api/data/kepegawaian/inventaris?id=${editingId}` 
-      : "/api/data/kepegawaian/inventaris";
-    const method = isEdit ? "PUT" : "POST";
+    try {
+      if (isEdit) {
+        const updated = rows.map((r) => r.id === editingId ? { ...r, ...payload } : r);
+        importDatasetRows("kepegawaian", "inventaris", updated, "overwrite");
+      } else {
+        appendDatasetRow("kepegawaian", "inventaris", payload);
+      }
 
-    const res = await fetch(url, {
-      method,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-
-    if (!res.ok) {
+      setForm(EMPTY_FORM);
+      setEditingId(null);
+      setOpen(false);
+      fetchRows();
+    } catch (err) {
+      console.error(err);
       alert(`Gagal ${isEdit ? "memperbarui" : "menyimpan"} inventaris.`);
-      return;
     }
-
-    setForm(EMPTY_FORM);
-    setEditingId(null);
-    setOpen(false);
-    await fetchRows();
   };
 
-  const deleteInventaris = async (id: string) => {
+  const deleteInventaris = (id: string) => {
     if (!confirm("Apakah Anda yakin ingin menghapus barang inventaris ini?")) return;
     try {
-      const res = await fetch(`/api/data/kepegawaian/inventaris?id=${id}`, {
-        method: "DELETE",
-      });
-      if (!res.ok) {
-        alert("Gagal menghapus data inventaris.");
-        return;
-      }
-      await fetchRows();
+      deleteDatasetRow("kepegawaian", "inventaris", id);
+      fetchRows();
     } catch (error) {
       console.error(error);
       alert("Terjadi kesalahan saat menghapus data.");
@@ -186,19 +177,9 @@ export function InventarisTab() {
             return;
           }
 
-          const res = await fetch("/api/data/kepegawaian/inventaris?mode=append", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(mappedData),
-          });
-
-          if (!res.ok) {
-            alert("Gagal mengimpor data ke server.");
-            return;
-          }
-
+          importDatasetRows("kepegawaian", "inventaris", mappedData, "append");
           alert(`Berhasil mengimpor ${mappedData.length} data inventaris.`);
-          await fetchRows();
+          fetchRows();
         } catch (err) {
           console.error(err);
           alert("Gagal memproses file Excel.");

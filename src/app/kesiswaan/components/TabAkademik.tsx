@@ -29,6 +29,13 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Plus, Trash2, ExternalLink, Edit } from "lucide-react";
+import {
+  getDatasetRows,
+  appendDatasetRow,
+  deleteDatasetRow,
+  importDatasetRows,
+  getDataKesiswaan,
+} from "@/lib/clientDb";
 
 type PrestasiRow = {
   id: string;
@@ -134,81 +141,62 @@ export default function TabAkademik() {
   const [allStudents, setAllStudents] = useState<any[]>([]);
   const [uniqueClasses, setUniqueClasses] = useState<string[]>([]);
 
-  const fetchRows = async () => {
+  const fetchRows = () => {
     try {
-      const res = await fetch("/api/data/kesiswaan/akademikPrestasi");
-      if (!res.ok) {
-        return;
-      }
-
-      const data = await res.json();
-      setRows(Array.isArray(data) ? data : []);
+      const data = getDatasetRows("kesiswaan", "akademikPrestasi");
+      setRows(Array.isArray(data) ? (data as PrestasiRow[]) : []);
     } catch (error) {
       console.error("Gagal memuat data akademik:", error);
     }
   };
 
-  const fetchKenaikanRows = async () => {
+  const fetchKenaikanRows = () => {
     try {
-      const res = await fetch("/api/data/kesiswaan/akademikKenaikan");
-      if (!res.ok) {
-        return;
-      }
-
-      const data = await res.json();
-      setKenaikanRows(Array.isArray(data) ? data : []);
+      const data = getDatasetRows("kesiswaan", "akademikKenaikan");
+      setKenaikanRows(Array.isArray(data) ? (data as KenaikanRow[]) : []);
     } catch (error) {
       console.error("Gagal memuat data kenaikan kelas:", error);
     }
   };
 
-  const fetchRekapLink = async () => {
+  const fetchRekapLink = () => {
     try {
-      const res = await fetch("/api/data/kesiswaan/rekapUjian");
-      if (!res.ok) return;
-      const data = await res.json();
+      const data = getDatasetRows("kesiswaan", "rekapUjian");
       if (Array.isArray(data) && data.length > 0) {
         const latest = data[data.length - 1];
-        setRekapLink(latest.link || "");
-        setInputLink(latest.link || "");
+        setRekapLink((latest as any).link || "");
+        setInputLink((latest as any).link || "");
       }
     } catch (error) {
       console.error("Gagal memuat link rekapitulasi TKA/PSAJ:", error);
     }
   };
 
-  const fetchRaportRows = async () => {
+  const fetchRaportRows = () => {
     try {
-      const res = await fetch("/api/data/kesiswaan/penyerahanRaport");
-      if (!res.ok) return;
-      const data = await res.json();
-      setRaportRows(Array.isArray(data) ? data : []);
+      const data = getDatasetRows("kesiswaan", "penyerahanRaport");
+      setRaportRows(Array.isArray(data) ? (data as RaportRow[]) : []);
     } catch (error) {
       console.error("Gagal memuat data penyerahan raport:", error);
     }
   };
 
-  const fetchIjazahRows = async () => {
+  const fetchIjazahRows = () => {
     try {
-      const res = await fetch("/api/data/kesiswaan/penyerahanIjazah");
-      if (!res.ok) return;
-      const data = await res.json();
-      setIjazahRows(Array.isArray(data) ? data : []);
+      const data = getDatasetRows("kesiswaan", "penyerahanIjazah");
+      setIjazahRows(Array.isArray(data) ? (data as IjazahRow[]) : []);
     } catch (error) {
       console.error("Gagal memuat data penyerahan ijazah:", error);
     }
   };
 
-  const fetchStudents = async () => {
+  const fetchStudents = () => {
     try {
-      const res = await fetch("/api/kesiswaan");
-      if (res.ok) {
-        const data = await res.json();
-        if (Array.isArray(data)) {
-          setAllStudents(data);
-          const classes = Array.from(new Set(data.map((s: any) => s.kelas).filter(Boolean))) as string[];
-          setUniqueClasses(classes.sort());
-        }
+      const data = getDataKesiswaan();
+      if (Array.isArray(data)) {
+        setAllStudents(data);
+        const classes = Array.from(new Set(data.map((s: any) => s.kelas).filter(Boolean))) as string[];
+        setUniqueClasses(classes.sort());
       }
     } catch (error) {
       console.error("Gagal memuat data siswa:", error);
@@ -225,34 +213,20 @@ export default function TabAkademik() {
   }, []);
 
   // Prestasi Handlers
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     setSaving(true);
     try {
-      let res;
       if (editingPrestasiId) {
         const updated = rows.map((item) => (item.id === editingPrestasiId ? { ...item, ...form } : item));
-        res = await fetch("/api/data/kesiswaan/akademikPrestasi?mode=overwrite", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(updated),
-        });
+        importDatasetRows("kesiswaan", "akademikPrestasi", updated, "overwrite");
       } else {
-        res = await fetch("/api/data/kesiswaan/akademikPrestasi", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(form),
-        });
-      }
-
-      if (!res.ok) {
-        alert("Gagal menyimpan data prestasi.");
-        return;
+        appendDatasetRow("kesiswaan", "akademikPrestasi", form);
       }
 
       setForm(EMPTY_FORM);
       setEditingPrestasiId(null);
       setOpen(false);
-      await fetchRows();
+      fetchRows();
     } catch (error) {
       console.error("Gagal menyimpan data akademik:", error);
       alert("Terjadi kesalahan saat menyimpan data.");
@@ -273,19 +247,14 @@ export default function TabAkademik() {
     setOpen(true);
   };
 
-  const handleDeletePrestasi = async (id: string) => {
+  const handleDeletePrestasi = (id: string) => {
     if (!confirm("Apakah Anda yakin ingin menghapus data prestasi ini?")) return;
     try {
-      const res = await fetch(`/api/data/kesiswaan/akademikPrestasi?id=${id}`, {
-        method: "DELETE",
-      });
-      if (res.ok) {
-        await fetchRows();
-      } else {
-        alert("Gagal menghapus data.");
-      }
+      deleteDatasetRow("kesiswaan", "akademikPrestasi", id);
+      fetchRows();
     } catch (error) {
       console.error("Error deleting:", error);
+      alert("Gagal menghapus data.");
     }
   };
 
@@ -310,38 +279,24 @@ export default function TabAkademik() {
     });
   };
 
-  const handleSubmitKenaikan = async () => {
+  const handleSubmitKenaikan = () => {
     if (!formKenaikan.kelas) {
       alert("Kelas wajib diisi.");
       return;
     }
     setSavingKenaikan(true);
     try {
-      let res;
       if (editingKenaikanId) {
         const updated = kenaikanRows.map((item) => (item.id === editingKenaikanId ? { ...item, ...formKenaikan } : item));
-        res = await fetch("/api/data/kesiswaan/akademikKenaikan?mode=overwrite", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(updated),
-        });
+        importDatasetRows("kesiswaan", "akademikKenaikan", updated, "overwrite");
       } else {
-        res = await fetch("/api/data/kesiswaan/akademikKenaikan", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(formKenaikan),
-        });
-      }
-
-      if (!res.ok) {
-        alert("Gagal menyimpan data kenaikan kelas.");
-        return;
+        appendDatasetRow("kesiswaan", "akademikKenaikan", formKenaikan);
       }
 
       setFormKenaikan(EMPTY_KENAIKAN_FORM);
       setEditingKenaikanId(null);
       setOpenKenaikan(false);
-      await fetchKenaikanRows();
+      fetchKenaikanRows();
     } catch (error) {
       console.error("Gagal menyimpan data kenaikan:", error);
       alert("Terjadi kesalahan saat menyimpan data.");
@@ -362,38 +317,23 @@ export default function TabAkademik() {
     setOpenKenaikan(true);
   };
 
-  const handleDeleteKenaikan = async (id: string) => {
+  const handleDeleteKenaikan = (id: string) => {
     if (!confirm("Apakah Anda yakin ingin menghapus data kenaikan kelas ini?")) return;
     try {
-      const res = await fetch(`/api/data/kesiswaan/akademikKenaikan?id=${id}`, {
-        method: "DELETE",
-      });
-      if (res.ok) {
-        await fetchKenaikanRows();
-      } else {
-        alert("Gagal menghapus data.");
-      }
+      deleteDatasetRow("kesiswaan", "akademikKenaikan", id);
+      fetchKenaikanRows();
     } catch (error) {
       console.error("Error deleting:", error);
+      alert("Gagal menghapus data.");
     }
   };
 
-  const handleSubmitRekap = async () => {
+  const handleSubmitRekap = () => {
     setSavingRekap(true);
     try {
-      const res = await fetch("/api/data/kesiswaan/rekapUjian?mode=overwrite", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify([{ id: "rekap-link", link: inputLink }]),
-      });
-
-      if (!res.ok) {
-        alert("Gagal menyimpan link Google Drive.");
-        return;
-      }
-
+      importDatasetRows("kesiswaan", "rekapUjian", [{ id: "rekap-link", link: inputLink }], "overwrite");
       setOpenRekap(false);
-      await fetchRekapLink();
+      fetchRekapLink();
     } catch (error) {
       console.error("Gagal menyimpan link:", error);
       alert("Terjadi kesalahan.");
@@ -402,22 +342,15 @@ export default function TabAkademik() {
     }
   };
 
-  const handleDeleteRekap = async () => {
+  const handleDeleteRekap = () => {
     if (!confirm("Apakah Anda yakin ingin menghapus link Google Drive ini?")) return;
     try {
-      const res = await fetch("/api/data/kesiswaan/rekapUjian?mode=overwrite", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify([]),
-      });
-      if (res.ok) {
-        setRekapLink("");
-        setInputLink("");
-      } else {
-        alert("Gagal menghapus link.");
-      }
+      importDatasetRows("kesiswaan", "rekapUjian", [], "overwrite");
+      setRekapLink("");
+      setInputLink("");
     } catch (error) {
       console.error("Error deleting rekap link:", error);
+      alert("Gagal menghapus link.");
     }
   };
 
@@ -439,38 +372,24 @@ export default function TabAkademik() {
     });
   };
 
-  const handleSubmitRaport = async () => {
+  const handleSubmitRaport = () => {
     if (!formRaport.kelas) {
       alert("Kelas wajib diisi.");
       return;
     }
     setSavingRaport(true);
     try {
-      let res;
       if (editingRaportId) {
         const updated = raportRows.map((item) => (item.id === editingRaportId ? { ...item, ...formRaport } : item));
-        res = await fetch("/api/data/kesiswaan/penyerahanRaport?mode=overwrite", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(updated),
-        });
+        importDatasetRows("kesiswaan", "penyerahanRaport", updated, "overwrite");
       } else {
-        res = await fetch("/api/data/kesiswaan/penyerahanRaport", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(formRaport),
-        });
-      }
-
-      if (!res.ok) {
-        alert("Gagal menyimpan data penyerahan raport.");
-        return;
+        appendDatasetRow("kesiswaan", "penyerahanRaport", formRaport);
       }
 
       setFormRaport(EMPTY_RAPORT_FORM);
       setEditingRaportId(null);
       setOpenRaport(false);
-      await fetchRaportRows();
+      fetchRaportRows();
     } catch (error) {
       console.error("Gagal menyimpan data penyerahan raport:", error);
       alert("Terjadi kesalahan.");
@@ -491,19 +410,14 @@ export default function TabAkademik() {
     setOpenRaport(true);
   };
 
-  const handleDeleteRaport = async (id: string) => {
+  const handleDeleteRaport = (id: string) => {
     if (!confirm("Apakah Anda yakin ingin menghapus data penyerahan raport ini?")) return;
     try {
-      const res = await fetch(`/api/data/kesiswaan/penyerahanRaport?id=${id}`, {
-        method: "DELETE",
-      });
-      if (res.ok) {
-        await fetchRaportRows();
-      } else {
-        alert("Gagal menghapus data.");
-      }
+      deleteDatasetRow("kesiswaan", "penyerahanRaport", id);
+      fetchRaportRows();
     } catch (error) {
       console.error("Error deleting:", error);
+      alert("Gagal menghapus data.");
     }
   };
 
@@ -557,7 +471,7 @@ export default function TabAkademik() {
     });
   };
 
-  const handleSubmitIjazah = async () => {
+  const handleSubmitIjazah = () => {
     if (ijazahInputList.length === 0) {
       alert("Impor kelas dan isi data terlebih dahulu.");
       return;
@@ -569,21 +483,12 @@ export default function TabAkademik() {
         kelas: selectedClass,
       }));
 
-      const res = await fetch("/api/data/kesiswaan/penyerahanIjazah", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      if (!res.ok) {
-        alert("Gagal menyimpan data penyerahan ijazah.");
-        return;
-      }
+      importDatasetRows("kesiswaan", "penyerahanIjazah", payload, "append");
 
       setOpenIjazah(false);
       setIjazahInputList([]);
       setSelectedClass("");
-      await fetchIjazahRows();
+      fetchIjazahRows();
     } catch (error) {
       console.error("Error saving ijazah rows:", error);
       alert("Terjadi kesalahan.");
@@ -597,7 +502,7 @@ export default function TabAkademik() {
     setOpenEditIjazah(true);
   };
 
-  const handleSubmitEditIjazahRow = async () => {
+  const handleSubmitEditIjazahRow = () => {
     if (!editingIjazahRow) return;
     setSavingIjazah(true);
     try {
@@ -605,20 +510,11 @@ export default function TabAkademik() {
         item.id === editingIjazahRow.id ? editingIjazahRow : item
       );
 
-      const res = await fetch("/api/data/kesiswaan/penyerahanIjazah?mode=overwrite", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(updated),
-      });
-
-      if (!res.ok) {
-        alert("Gagal memperbarui data penyerahan ijazah.");
-        return;
-      }
+      importDatasetRows("kesiswaan", "penyerahanIjazah", updated, "overwrite");
 
       setOpenEditIjazah(false);
       setEditingIjazahRow(null);
-      await fetchIjazahRows();
+      fetchIjazahRows();
     } catch (error) {
       console.error("Error updating ijazah row:", error);
       alert("Terjadi kesalahan.");
@@ -627,19 +523,14 @@ export default function TabAkademik() {
     }
   };
 
-  const handleDeleteIjazah = async (id: string) => {
+  const handleDeleteIjazah = (id: string) => {
     if (!confirm("Apakah Anda yakin ingin menghapus data penyerahan ijazah ini?")) return;
     try {
-      const res = await fetch(`/api/data/kesiswaan/penyerahanIjazah?id=${id}`, {
-        method: "DELETE",
-      });
-      if (res.ok) {
-        await fetchIjazahRows();
-      } else {
-        alert("Gagal menghapus data.");
-      }
+      deleteDatasetRow("kesiswaan", "penyerahanIjazah", id);
+      fetchIjazahRows();
     } catch (error) {
       console.error("Error deleting ijazah row:", error);
+      alert("Gagal menghapus data.");
     }
   };
 

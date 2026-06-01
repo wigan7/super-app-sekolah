@@ -14,6 +14,12 @@ import {
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Pencil, Trash } from "lucide-react";
+import {
+  getDatasetRows,
+  appendDatasetRow,
+  deleteDatasetRow,
+  importDatasetRows
+} from "@/lib/clientDb";
 
 type DiklatRow = {
   id: string;
@@ -63,22 +69,13 @@ export function PengembanganPrestasiTab() {
   const [editingDiklatId, setEditingDiklatId] = useState<string | null>(null);
   const [editingPenghargaanId, setEditingPenghargaanId] = useState<string | null>(null);
 
-  const fetchRows = async () => {
+  const fetchRows = () => {
     try {
-      const [diklatRes, penghargaanRes] = await Promise.all([
-        fetch("/api/data/kepegawaian/diklat"),
-        fetch("/api/data/kepegawaian/penghargaan"),
-      ]);
-
-      if (diklatRes.ok) {
-        const data = await diklatRes.json();
-        setDiklatRows(Array.isArray(data) ? data : []);
-      }
-
-      if (penghargaanRes.ok) {
-        const data = await penghargaanRes.json();
-        setPenghargaanRows(Array.isArray(data) ? data : []);
-      }
+      const diklatData = getDatasetRows("kepegawaian", "diklat");
+      const penghargaanData = getDatasetRows("kepegawaian", "penghargaan");
+      
+      setDiklatRows(Array.isArray(diklatData) ? (diklatData as DiklatRow[]) : []);
+      setPenghargaanRows(Array.isArray(penghargaanData) ? (penghargaanData as PenghargaanRow[]) : []);
     } catch (error) {
       console.error("Gagal memuat data pengembangan/prestasi:", error);
     }
@@ -89,82 +86,61 @@ export function PengembanganPrestasiTab() {
     fetchRows();
   }, []);
 
-  const saveDiklat = async () => {
+  const saveDiklat = () => {
     const isEdit = !!editingDiklatId;
-    const url = isEdit 
-      ? `/api/data/kepegawaian/diklat?id=${editingDiklatId}` 
-      : "/api/data/kepegawaian/diklat";
-    const method = isEdit ? "PUT" : "POST";
-
-    const res = await fetch(url, {
-      method,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(diklatForm),
-    });
-
-    if (!res.ok) {
+    try {
+      if (isEdit) {
+        const updated = diklatRows.map(r => r.id === editingDiklatId ? { ...r, ...diklatForm } : r);
+        importDatasetRows("kepegawaian", "diklat", updated, "overwrite");
+      } else {
+        appendDatasetRow("kepegawaian", "diklat", diklatForm);
+      }
+      setDiklatForm(EMPTY_DIKLAT);
+      setEditingDiklatId(null);
+      setOpenDiklat(false);
+      fetchRows();
+    } catch (err) {
+      console.error(err);
       alert(`Gagal ${isEdit ? "memperbarui" : "menyimpan"} diklat`);
-      return;
     }
-
-    setDiklatForm(EMPTY_DIKLAT);
-    setEditingDiklatId(null);
-    setOpenDiklat(false);
-    await fetchRows();
   };
 
-  const deleteDiklat = async (id: string) => {
+  const deleteDiklat = (id: string) => {
     if (!confirm("Apakah Anda yakin ingin menghapus data diklat ini?")) return;
     try {
-      const res = await fetch(`/api/data/kepegawaian/diklat?id=${id}`, {
-        method: "DELETE",
-      });
-      if (!res.ok) {
-        alert("Gagal menghapus data diklat.");
-        return;
-      }
-      await fetchRows();
+      deleteDatasetRow("kepegawaian", "diklat", id);
+      fetchRows();
     } catch (error) {
       console.error(error);
       alert("Terjadi kesalahan saat menghapus data.");
     }
   };
 
-  const savePenghargaan = async () => {
+  const savePenghargaan = () => {
     const isEdit = !!editingPenghargaanId;
-    const url = isEdit 
-      ? `/api/data/kepegawaian/penghargaan?id=${editingPenghargaanId}` 
-      : "/api/data/kepegawaian/penghargaan";
-    const method = isEdit ? "PUT" : "POST";
+    try {
+      if (isEdit) {
+        const updated = penghargaanRows.map(r => r.id === editingPenghargaanId ? { ...r, ...penghargaanForm } : r);
+        importDatasetRows("kepegawaian", "penghargaan", updated, "overwrite");
+      } else {
+        appendDatasetRow("kepegawaian", "penghargaan", penghargaanForm);
+      }
 
-    const res = await fetch(url, {
-      method,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(penghargaanForm),
-    });
-
-    if (!res.ok) {
+      setPenghargaanForm(EMPTY_PENGHARGAAN);
+      setEditingPenghargaanId(null);
+      setOpenPenghargaan(false);
+      fetchRows();
+    } catch (err) {
+      console.error(err);
       alert(`Gagal ${isEdit ? "memperbarui" : "menyimpan"} penghargaan`);
-      return;
     }
-
-    setPenghargaanForm(EMPTY_PENGHARGAAN);
-    setEditingPenghargaanId(null);
-    setOpenPenghargaan(false);
-    await fetchRows();
   };
 
-  const deletePenghargaan = async (id: string) => {
+  const deletePenghargaan = (id: string) => {
     if (!confirm("Apakah Anda yakin ingin menghapus data penghargaan ini?")) return;
     try {
-      const res = await fetch(`/api/data/kepegawaian/penghargaan?id=${id}`, {
-        method: "DELETE",
-      });
-      if (!res.ok) {
-        alert("Gagal menghapus data penghargaan.");
-        return;
-      }
-      await fetchRows();
+      deleteDatasetRow("kepegawaian", "penghargaan", id);
+      fetchRows();
     } catch (error) {
       console.error(error);
       alert("Terjadi kesalahan saat menghapus data.");
@@ -271,19 +247,9 @@ export function PengembanganPrestasiTab() {
             return;
           }
 
-          const res = await fetch(`/api/data/kepegawaian/${type}?mode=append`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(mappedData),
-          });
-
-          if (!res.ok) {
-            alert("Gagal mengimpor data ke server.");
-            return;
-          }
-
+          importDatasetRows("kepegawaian", type, mappedData as unknown as Record<string, string>[], "append");
           alert(`Berhasil mengimpor ${mappedData.length} data.`);
-          await fetchRows();
+          fetchRows();
         } catch (err) {
           console.error(err);
           alert("Gagal memproses file Excel.");

@@ -23,6 +23,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import * as XLSX from "xlsx";
+import { getDataKesiswaan, getIdentitas, overwriteDataKesiswaan, addDataKesiswaan } from "@/lib/clientDb";
 
 const EXCEL_HEADERS = [
   // 1. Identitas Siswa
@@ -135,14 +136,11 @@ export default function TabInduk() {
   const [importFileName, setImportFileName] = useState("");
   const [showImportModal, setShowImportModal] = useState(false);
 
-  const fetchData = async () => {
+  const fetchData = () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/kesiswaan");
-      if (res.ok) {
-        const json = await res.json();
-        setData(json);
-      }
+      const data = getDataKesiswaan();
+      setData(data as Record<string, string>[]);
     } catch (error) {
       console.error("Failed to fetch data:", error);
     } finally {
@@ -153,13 +151,10 @@ export default function TabInduk() {
   useEffect(() => {
     fetchData();
 
-    const fetchSchoolName = async () => {
+    const fetchSchoolName = () => {
       try {
-        const res = await fetch("/api/identitas");
-        if (res.ok) {
-          const data = await res.json();
-          setNamaSekolah(data?.namaSekolah || "");
-        }
+        const data = getIdentitas();
+        setNamaSekolah(data?.namaSekolah || "");
       } catch (error) {
         console.error("Gagal memuat nama sekolah di kesiswaan:", error);
       }
@@ -443,29 +438,24 @@ export default function TabInduk() {
     reader.readAsArrayBuffer(file);
   };
 
-  const confirmImport = async (mode: "append" | "overwrite") => {
+  const confirmImport = (mode: "append" | "overwrite") => {
     if (!pendingImportData) return;
     
     setImporting(true);
     setShowImportModal(false);
     try {
-      const res = await fetch(`/api/kesiswaan?mode=${mode}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(pendingImportData),
-      });
-
-      if (res.ok) {
-        const resJson = await res.json();
-        alert(
-          mode === "overwrite"
-            ? `Impor Sukses! Berhasil menimpa Buku Induk dengan ${resJson.count || pendingImportData.length} data siswa dari DAPODIK.`
-            : `Impor Sukses! Berhasil menambahkan ${resJson.count || pendingImportData.length} data siswa baru dari DAPODIK.`
-        );
-        fetchData();
+      if (mode === "overwrite") {
+        overwriteDataKesiswaan(pendingImportData);
       } else {
-        alert("Gagal menyimpan data impor Excel.");
+        pendingImportData.forEach(row => addDataKesiswaan(row));
       }
+
+      alert(
+        mode === "overwrite"
+          ? `Impor Sukses! Berhasil menimpa Buku Induk dengan ${pendingImportData.length} data siswa dari DAPODIK.`
+          : `Impor Sukses! Berhasil menambahkan ${pendingImportData.length} data siswa baru dari DAPODIK.`
+      );
+      fetchData();
     } catch (err) {
       console.error(err);
       alert("Gagal mengunggah data.");

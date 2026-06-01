@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { FileOutput } from "lucide-react";
+import { appendDatasetRow } from "@/lib/clientDb";
 
 const INITIAL_FORM = {
   jenis: "masuk",
@@ -29,10 +30,10 @@ export default function MutasiDialog({ onSuccess }: { onSuccess?: () => void }) 
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState(INITIAL_FORM);
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     setSaving(true);
     try {
-      const endpoint = form.jenis === "masuk" ? "/api/data/kesiswaan/mutasiMasuk" : "/api/data/kesiswaan/mutasiKeluar";
+      const dataset = form.jenis === "masuk" ? "mutasiMasuk" : "mutasiKeluar";
       const payload = {
         tanggal: form.tanggal,
         nama: form.nama,
@@ -41,16 +42,7 @@ export default function MutasiDialog({ onSuccess }: { onSuccess?: () => void }) 
         ...(form.jenis === "masuk" ? { dari: form.sekolah } : { ke: form.sekolah }),
       };
 
-      const res = await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      if (!res.ok) {
-        alert("Gagal menyimpan data mutasi.");
-        return;
-      }
+      appendDatasetRow("kesiswaan", dataset, payload);
 
       setForm(INITIAL_FORM);
       setOpen(false);

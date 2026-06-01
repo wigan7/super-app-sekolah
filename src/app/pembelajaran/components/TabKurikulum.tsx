@@ -17,6 +17,13 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import {
+  getDatasetRows,
+  appendDatasetRow,
+  deleteDatasetRow,
+  importDatasetRows,
+  getIdentitas
+} from "@/lib/clientDb";
 
 type PencapaianRow = {
   id: string;
@@ -73,34 +80,22 @@ export default function TabKurikulum() {
   const [editingPencapaianId, setEditingPencapaianId] = useState<string | null>(null);
   const [editingTugasId, setEditingTugasId] = useState<string | null>(null);
 
-  const fetchRows = async () => {
+  const fetchRows = () => {
     try {
-      const [pencapaianRes, tugasRes] = await Promise.all([
-        fetch("/api/data/pembelajaran/kurikulumPencapaian"),
-        fetch("/api/data/pembelajaran/pembagianTugas"),
-      ]);
-
-      if (pencapaianRes.ok) {
-        const data = await pencapaianRes.json();
-        setPencapaianRows(Array.isArray(data) ? data : []);
-      }
-
-      if (tugasRes.ok) {
-        const data = await tugasRes.json();
-        setTugasRows(Array.isArray(data) ? data : []);
-      }
+      const pencapaianData = getDatasetRows("pembelajaran", "kurikulumPencapaian");
+      const tugasData = getDatasetRows("pembelajaran", "pembagianTugas");
+      
+      setPencapaianRows(Array.isArray(pencapaianData) ? (pencapaianData as PencapaianRow[]) : []);
+      setTugasRows(Array.isArray(tugasData) ? (tugasData as TugasRow[]) : []);
     } catch (error) {
       console.error("Gagal memuat data kurikulum:", error);
     }
   };
 
-  const fetchPegawaiList = async () => {
+  const fetchPegawaiList = () => {
     try {
-      const res = await fetch("/api/data/kepegawaian/pegawai");
-      if (res.ok) {
-        const data = await res.json();
-        setPegawaiList(Array.isArray(data) ? data : []);
-      }
+      const data = getDatasetRows("kepegawaian", "pegawai");
+      setPegawaiList(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Gagal memuat list pegawai:", error);
     }
@@ -111,13 +106,10 @@ export default function TabKurikulum() {
     fetchRows();
     fetchPegawaiList();
 
-    const fetchSchoolName = async () => {
+    const fetchSchoolName = () => {
       try {
-        const res = await fetch("/api/identitas");
-        if (res.ok) {
-          const data = await res.json();
-          setNamaSekolah(data?.namaSekolah || "");
-        }
+        const data = getIdentitas();
+        setNamaSekolah(data?.namaSekolah || "");
       } catch (error) {
         console.error("Gagal memuat nama sekolah di kurikulum:", error);
       }
@@ -125,7 +117,7 @@ export default function TabKurikulum() {
     fetchSchoolName();
   }, []);
 
-  const savePencapaian = async () => {
+  const savePencapaian = () => {
     const payload = {
       mapel: pencapaianForm.mapel,
       target: Number(pencapaianForm.target || 0),
@@ -134,83 +126,65 @@ export default function TabKurikulum() {
     };
 
     const isEdit = !!editingPencapaianId;
-    const url = isEdit
-      ? `/api/data/pembelajaran/kurikulumPencapaian?id=${editingPencapaianId}`
-      : "/api/data/pembelajaran/kurikulumPencapaian";
-    const method = isEdit ? "PUT" : "POST";
+    try {
+      if (isEdit) {
+        const updated = pencapaianRows.map(r => r.id === editingPencapaianId ? { ...r, ...payload } : r);
+        importDatasetRows("pembelajaran", "kurikulumPencapaian", updated, "overwrite");
+      } else {
+        appendDatasetRow("pembelajaran", "kurikulumPencapaian", payload);
+      }
 
-    const res = await fetch(url, {
-      method,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-
-    if (!res.ok) {
-      throw new Error(`Gagal ${isEdit ? "memperbarui" : "menyimpan"} pencapaian`);
+      setPencapaianForm(EMPTY_PENCAPAIAN);
+      setEditingPencapaianId(null);
+      setOpenPencapaian(false);
+      fetchRows();
+    } catch (err) {
+      console.error(err);
+      alert(`Gagal ${isEdit ? "memperbarui" : "menyimpan"} pencapaian`);
     }
-
-    setPencapaianForm(EMPTY_PENCAPAIAN);
-    setEditingPencapaianId(null);
-    setOpenPencapaian(false);
-    await fetchRows();
   };
 
-  const deletePencapaian = async (id: string) => {
+  const deletePencapaian = (id: string) => {
     if (!confirm("Apakah Anda yakin ingin menghapus data pencapaian kurikulum ini?")) return;
     try {
-      const res = await fetch(`/api/data/pembelajaran/kurikulumPencapaian?id=${id}`, {
-        method: "DELETE",
-      });
-      if (!res.ok) {
-        alert("Gagal menghapus data pencapaian.");
-        return;
-      }
-      await fetchRows();
+      deleteDatasetRow("pembelajaran", "kurikulumPencapaian", id);
+      fetchRows();
     } catch (error) {
       console.error(error);
       alert("Terjadi kesalahan saat menghapus data.");
     }
   };
 
-  const saveTugas = async () => {
+  const saveTugas = () => {
     const payload = {
       ...tugasForm,
       jam: Number(tugasForm.jam || 0),
     };
 
     const isEdit = !!editingTugasId;
-    const url = isEdit
-      ? `/api/data/pembelajaran/pembagianTugas?id=${editingTugasId}`
-      : "/api/data/pembelajaran/pembagianTugas";
-    const method = isEdit ? "PUT" : "POST";
+    try {
+      if (isEdit) {
+        const updated = tugasRows.map(r => r.id === editingTugasId ? { ...r, ...payload } : r);
+        importDatasetRows("pembelajaran", "pembagianTugas", updated, "overwrite");
+      } else {
+        appendDatasetRow("pembelajaran", "pembagianTugas", payload);
+      }
 
-    const res = await fetch(url, {
-      method,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-
-    if (!res.ok) {
-      throw new Error(`Gagal ${isEdit ? "memperbarui" : "menyimpan"} tugas`);
+      setTugasForm(EMPTY_TUGAS);
+      setEditingTugasId(null);
+      setOpenTugas(false);
+      fetchRows();
+    } catch (err) {
+      console.error(err);
+      alert(`Gagal ${isEdit ? "memperbarui" : "menyimpan"} tugas`);
     }
-
-    setTugasForm(EMPTY_TUGAS);
-    setEditingTugasId(null);
-    setOpenTugas(false);
-    await fetchRows();
   };
 
-  const deleteTugas = async (id: string) => {
+  const deleteTugas = (id: string) => {
     if (!confirm("Apakah Anda yakin ingin menghapus pembagian tugas mengajar ini?")) return;
     try {
-      const res = await fetch(`/api/data/pembelajaran/pembagianTugas?id=${id}`, {
-        method: "DELETE",
-      });
-      if (!res.ok) {
-        alert("Gagal menghapus data tugas.");
-        return;
-      }
-      await fetchRows();
+      deleteDatasetRow("pembelajaran", "pembagianTugas", id);
+      fetchRows();
     } catch (error) {
       console.error(error);
       alert("Terjadi kesalahan saat menghapus data.");

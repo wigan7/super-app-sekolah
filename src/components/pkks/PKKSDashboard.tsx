@@ -11,6 +11,11 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Link2, FileCheck2, Percent } from "lucide-react";
+import {
+  getPkksState,
+  updatePkksState,
+  getIdentitas
+} from "@/lib/clientDb";
 
 type Indicator = {
   id: string;
@@ -106,14 +111,9 @@ export default function PKKSDashboard() {
   };
 
   useEffect(() => {
-    const fetchPkks = async () => {
+    const fetchPkks = () => {
       try {
-        const res = await fetch('/api/pkks');
-        if (!res.ok) {
-          return;
-        }
-
-        const data = await res.json();
+        const data = getPkksState();
         setCompletedIndicators(data?.completedIndicators ?? {});
         setLinks(data?.links ?? {});
       } catch (error) {
@@ -121,13 +121,10 @@ export default function PKKSDashboard() {
       }
     };
 
-    const fetchIdentitas = async () => {
+    const fetchIdentitas = () => {
       try {
-        const res = await fetch('/api/identitas');
-        if (res.ok) {
-          const data = await res.json();
-          setIdentitas(data || {});
-        }
+        const data = getIdentitas();
+        setIdentitas(data || {});
       } catch (error) {
         console.error('Failed to fetch school identity in PKKS:', error);
       }
@@ -137,18 +134,11 @@ export default function PKKSDashboard() {
     fetchIdentitas();
   }, []);
 
-  const savePkks = async () => {
+  const savePkks = () => {
     setSaving(true);
     try {
-      const res = await fetch('/api/pkks', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ completedIndicators, links }),
-      });
-
-      if (!res.ok) {
-        alert('Gagal menyimpan data PKKS.');
-      }
+      updatePkksState({ completedIndicators, links });
+      alert('Data PKKS berhasil disimpan.');
     } catch (error) {
       console.error('Failed to save PKKS data:', error);
       alert('Terjadi kesalahan saat menyimpan PKKS.');

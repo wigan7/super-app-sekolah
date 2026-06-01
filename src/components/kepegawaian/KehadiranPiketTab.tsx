@@ -24,6 +24,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  getDatasetRows,
+  appendDatasetRow,
+  deleteDatasetRow,
+  importDatasetRows
+} from "@/lib/clientDb";
 
 type IzinRow = {
   id: string;
@@ -79,34 +85,22 @@ export function KehadiranPiketTab() {
   const [editingIzinId, setEditingIzinId] = useState<string | null>(null);
   const [editingPiketId, setEditingPiketId] = useState<string | null>(null);
 
-  const fetchRows = async () => {
+  const fetchRows = () => {
     try {
-      const [izinRes, piketRes] = await Promise.all([
-        fetch("/api/data/kepegawaian/izinKeluar"),
-        fetch("/api/data/kepegawaian/piket"),
-      ]);
-
-      if (izinRes.ok) {
-        const data = await izinRes.json();
-        setIzinRows(Array.isArray(data) ? data : []);
-      }
-
-      if (piketRes.ok) {
-        const data = await piketRes.json();
-        setPiketRows(Array.isArray(data) ? data : []);
-      }
+      const izinData = getDatasetRows("kepegawaian", "izinKeluar");
+      const piketData = getDatasetRows("kepegawaian", "piket");
+      
+      setIzinRows(Array.isArray(izinData) ? (izinData as IzinRow[]) : []);
+      setPiketRows(Array.isArray(piketData) ? (piketData as PiketRow[]) : []);
     } catch (error) {
       console.error("Gagal memuat data izin/piket:", error);
     }
   };
 
-  const fetchPegawaiList = async () => {
+  const fetchPegawaiList = () => {
     try {
-      const res = await fetch("/api/data/kepegawaian/pegawai");
-      if (res.ok) {
-        const data = await res.json();
-        setPegawaiList(Array.isArray(data) ? data : []);
-      }
+      const data = getDatasetRows("kepegawaian", "pegawai");
+      setPegawaiList(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Gagal memuat list pegawai:", error);
     }
@@ -135,82 +129,64 @@ export function KehadiranPiketTab() {
     fetchPegawaiList();
   }, []);
 
-  const saveIzin = async () => {
+  const saveIzin = () => {
     const isEdit = !!editingIzinId;
-    const url = isEdit 
-      ? `/api/data/kepegawaian/izinKeluar?id=${editingIzinId}` 
-      : "/api/data/kepegawaian/izinKeluar";
-    const method = isEdit ? "PUT" : "POST";
+    
+    try {
+      if (isEdit) {
+        const updated = izinRows.map(r => r.id === editingIzinId ? { ...r, ...izinForm } : r);
+        importDatasetRows("kepegawaian", "izinKeluar", updated, "overwrite");
+      } else {
+        appendDatasetRow("kepegawaian", "izinKeluar", izinForm);
+      }
 
-    const res = await fetch(url, {
-      method,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(izinForm),
-    });
-
-    if (!res.ok) {
+      setIzinForm(EMPTY_IZIN);
+      setEditingIzinId(null);
+      setOpenIzin(false);
+      fetchRows();
+    } catch (err) {
+      console.error(err);
       alert(`Gagal ${isEdit ? "memperbarui" : "menyimpan"} izin`);
-      return;
     }
-
-    setIzinForm(EMPTY_IZIN);
-    setEditingIzinId(null);
-    setOpenIzin(false);
-    await fetchRows();
   };
 
-  const deleteIzin = async (id: string) => {
+  const deleteIzin = (id: string) => {
     if (!confirm("Apakah Anda yakin ingin menghapus data izin keluar ini?")) return;
     try {
-      const res = await fetch(`/api/data/kepegawaian/izinKeluar?id=${id}`, {
-        method: "DELETE",
-      });
-      if (!res.ok) {
-        alert("Gagal menghapus data izin.");
-        return;
-      }
-      await fetchRows();
+      deleteDatasetRow("kepegawaian", "izinKeluar", id);
+      fetchRows();
     } catch (error) {
       console.error(error);
       alert("Terjadi kesalahan saat menghapus data.");
     }
   };
 
-  const savePiket = async () => {
+  const savePiket = () => {
     const isEdit = !!editingPiketId;
-    const url = isEdit 
-      ? `/api/data/kepegawaian/piket?id=${editingPiketId}` 
-      : "/api/data/kepegawaian/piket";
-    const method = isEdit ? "PUT" : "POST";
+    
+    try {
+      if (isEdit) {
+        const updated = piketRows.map(r => r.id === editingPiketId ? { ...r, ...piketForm } : r);
+        importDatasetRows("kepegawaian", "piket", updated, "overwrite");
+      } else {
+        appendDatasetRow("kepegawaian", "piket", piketForm);
+      }
 
-    const res = await fetch(url, {
-      method,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(piketForm),
-    });
-
-    if (!res.ok) {
+      setPiketForm(EMPTY_PIKET);
+      setEditingPiketId(null);
+      setOpenPiket(false);
+      fetchRows();
+    } catch (err) {
+      console.error(err);
       alert(`Gagal ${isEdit ? "memperbarui" : "menyimpan"} piket`);
-      return;
     }
-
-    setPiketForm(EMPTY_PIKET);
-    setEditingPiketId(null);
-    setOpenPiket(false);
-    await fetchRows();
   };
 
-  const deletePiket = async (id: string) => {
+  const deletePiket = (id: string) => {
     if (!confirm("Apakah Anda yakin ingin menghapus laporan piket ini?")) return;
     try {
-      const res = await fetch(`/api/data/kepegawaian/piket?id=${id}`, {
-        method: "DELETE",
-      });
-      if (!res.ok) {
-        alert("Gagal menghapus data piket.");
-        return;
-      }
-      await fetchRows();
+      deleteDatasetRow("kepegawaian", "piket", id);
+      fetchRows();
     } catch (error) {
       console.error(error);
       alert("Terjadi kesalahan saat menghapus data.");

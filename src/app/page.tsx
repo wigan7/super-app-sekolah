@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { motion, Variants } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, UserCog, FileCheck } from "lucide-react";
+import { getDataKesiswaan, getDataKepegawaian, getDataPkks, getIdentitas } from "@/lib/clientDb";
 
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
@@ -37,36 +38,33 @@ export default function Dashboard() {
   const [identitas, setIdentitas] = useState<{ namaKepalaSekolah?: string; namaSekolah?: string }>({});
 
   useEffect(() => {
-    const fetchDashboardData = async () => {
+    const fetchData = () => {
       try {
-        const response = await fetch('/api/dashboard');
-        if (response.ok) {
-          const data = await response.json();
-          setDashboardData({
-            totalSiswa: data.totalSiswa.toString(),
-            totalGuru: data.totalGuru.toString(),
-            pkksProgress: data.pkksProgress,
-          });
+        const siswa = getDataKesiswaan();
+        const guru = getDataKepegawaian();
+        const pkks = getDataPkks();
+        
+        let pkksProgress = 0;
+        if (pkks && pkks.completedIndicators) {
+          const completedCount = Object.values(pkks.completedIndicators).filter(Boolean).length;
+          const totalIndicators = 13;
+          pkksProgress = Math.round((completedCount / totalIndicators) * 100);
         }
+
+        setDashboardData({
+          totalSiswa: siswa.length.toString(),
+          totalGuru: guru.length.toString(),
+          pkksProgress: `${pkksProgress}%`,
+        });
+
+        const idData = getIdentitas();
+        setIdentitas(idData || {});
       } catch (error) {
         console.error("Failed to fetch dashboard data:", error);
       }
     };
 
-    const fetchIdentitas = async () => {
-      try {
-        const response = await fetch('/api/identitas');
-        if (response.ok) {
-          const data = await response.json();
-          setIdentitas(data || {});
-        }
-      } catch (error) {
-        console.error("Failed to fetch school identity:", error);
-      }
-    };
-
-    fetchDashboardData();
-    fetchIdentitas();
+    fetchData();
   }, []);
 
   const summaryData = [

@@ -18,6 +18,13 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  getDatasetRows,
+  appendDatasetRow,
+  deleteDatasetRow,
+  importDatasetRows,
+  getIdentitas
+} from "@/lib/clientDb";
 
 type TamuRow = {
   id: string;
@@ -85,28 +92,15 @@ export default function TabHumas() {
   const [editingHumasId, setEditingHumasId] = useState<string | null>(null);
   const [editingPengaduanId, setEditingPengaduanId] = useState<string | null>(null);
 
-  const fetchRows = async () => {
+  const fetchRows = () => {
     try {
-      const [tamuRes, humasRes, pengaduanRes] = await Promise.all([
-        fetch("/api/data/pembelajaran/tamu"),
-        fetch("/api/data/pembelajaran/humas"),
-        fetch("/api/data/pembelajaran/pengaduan"),
-      ]);
+      const tamuData = getDatasetRows("pembelajaran", "tamu");
+      const humasData = getDatasetRows("pembelajaran", "humas");
+      const pengaduanData = getDatasetRows("pembelajaran", "pengaduan");
 
-      if (tamuRes.ok) {
-        const data = await tamuRes.json();
-        setTamuRows(Array.isArray(data) ? data : []);
-      }
-
-      if (humasRes.ok) {
-        const data = await humasRes.json();
-        setHumasRows(Array.isArray(data) ? data : []);
-      }
-
-      if (pengaduanRes.ok) {
-        const data = await pengaduanRes.json();
-        setPengaduanRows(Array.isArray(data) ? data : []);
-      }
+      setTamuRows(Array.isArray(tamuData) ? (tamuData as TamuRow[]) : []);
+      setHumasRows(Array.isArray(humasData) ? (humasData as HumasRow[]) : []);
+      setPengaduanRows(Array.isArray(pengaduanData) ? (pengaduanData as PengaduanRow[]) : []);
     } catch (error) {
       console.error("Gagal memuat data humas:", error);
     }
@@ -116,13 +110,10 @@ export default function TabHumas() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchRows();
 
-    const fetchSchoolName = async () => {
+    const fetchSchoolName = () => {
       try {
-        const res = await fetch("/api/identitas");
-        if (res.ok) {
-          const data = await res.json();
-          setNamaSekolah(data?.namaSekolah || "");
-        }
+        const data = getIdentitas();
+        setNamaSekolah(data?.namaSekolah || "");
       } catch (error) {
         console.error("Gagal memuat nama sekolah di humas:", error);
       }
@@ -130,34 +121,32 @@ export default function TabHumas() {
     fetchSchoolName();
   }, []);
 
-  const save = async (endpoint: string, payload: Record<string, string>, editId: string | null, onDone: () => void) => {
-    const url = editId ? `${endpoint}?id=${editId}` : endpoint;
-    const method = editId ? "PUT" : "POST";
-    const res = await fetch(url, {
-      method,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
+  const save = (dataset: string, payload: Record<string, string>, editId: string | null, onDone: () => void) => {
+    try {
+      if (editId) {
+        let currentRows: any[] = [];
+        if (dataset === "tamu") currentRows = tamuRows;
+        else if (dataset === "humas") currentRows = humasRows;
+        else if (dataset === "pengaduan") currentRows = pengaduanRows;
 
-    if (!res.ok) {
-      throw new Error("Gagal menyimpan data");
+        const updated = currentRows.map(r => r.id === editId ? { ...r, ...payload } : r);
+        importDatasetRows("pembelajaran", dataset, updated, "overwrite");
+      } else {
+        appendDatasetRow("pembelajaran", dataset, payload);
+      }
+      onDone();
+      fetchRows();
+    } catch (err) {
+      console.error(err);
+      alert("Gagal menyimpan data");
     }
-
-    onDone();
-    await fetchRows();
   };
 
-  const deleteItem = async (endpoint: string, id: string) => {
+  const deleteItem = (dataset: string, id: string) => {
     if (!confirm("Apakah Anda yakin ingin menghapus data ini?")) return;
     try {
-      const res = await fetch(`${endpoint}?id=${id}`, {
-        method: "DELETE",
-      });
-      if (!res.ok) {
-        alert("Gagal menghapus data.");
-        return;
-      }
-      await fetchRows();
+      deleteDatasetRow("pembelajaran", dataset, id);
+      fetchRows();
     } catch (error) {
       console.error(error);
       alert("Terjadi kesalahan saat menghapus data.");
@@ -222,17 +211,9 @@ export default function TabHumas() {
             return;
           }
 
-          const res = await fetch("/api/data/pembelajaran/tamu?mode=append", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(mapped),
-          });
-          if (res.ok) {
-            alert(`Berhasil mengimpor ${mapped.length} data kunjungan tamu.`);
-            await fetchRows();
-          } else {
-            alert("Gagal mengimpor data.");
-          }
+          importDatasetRows("pembelajaran", "tamu", mapped, "append");
+          alert(`Berhasil mengimpor ${mapped.length} data kunjungan tamu.`);
+          fetchRows();
         } catch (err) {
           console.error(err);
           alert("Gagal memproses file.");
@@ -300,17 +281,9 @@ export default function TabHumas() {
             return;
           }
 
-          const res = await fetch("/api/data/pembelajaran/humas?mode=append", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(mapped),
-          });
-          if (res.ok) {
-            alert(`Berhasil mengimpor ${mapped.length} data kegiatan humas.`);
-            await fetchRows();
-          } else {
-            alert("Gagal mengimpor data.");
-          }
+          importDatasetRows("pembelajaran", "humas", mapped, "append");
+          alert(`Berhasil mengimpor ${mapped.length} data kegiatan humas.`);
+          fetchRows();
         } catch (err) {
           console.error(err);
           alert("Gagal memproses file.");
@@ -382,17 +355,9 @@ export default function TabHumas() {
             return;
           }
 
-          const res = await fetch("/api/data/pembelajaran/pengaduan?mode=append", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(mapped),
-          });
-          if (res.ok) {
-            alert(`Berhasil mengimpor ${mapped.length} data pengaduan/saran.`);
-            await fetchRows();
-          } else {
-            alert("Gagal mengimpor data.");
-          }
+          importDatasetRows("pembelajaran", "pengaduan", mapped, "append");
+          alert(`Berhasil mengimpor ${mapped.length} data pengaduan/saran.`);
+          fetchRows();
         } catch (err) {
           console.error(err);
           alert("Gagal memproses file.");
@@ -468,7 +433,7 @@ export default function TabHumas() {
                       <div className="grid gap-2"><Label htmlFor="tmaksud">Maksud Kunjungan</Label><Input id="tmaksud" value={tamuForm.maksud} onChange={(e) => setTamuForm((prev) => ({ ...prev, maksud: e.target.value }))} /></div>
                       <div className="grid gap-2"><Label htmlFor="ttemuan">Temuan/Kesan</Label><Input id="ttemuan" value={tamuForm.temuan} onChange={(e) => setTamuForm((prev) => ({ ...prev, temuan: e.target.value }))} /></div>
                     </div>
-                    <DialogFooter><Button variant="outline" onClick={() => setOpenTamu(false)}>Batal</Button><Button onClick={() => save("/api/data/pembelajaran/tamu", tamuForm, editingTamuId, () => { setTamuForm(EMPTY_TAMU); setEditingTamuId(null); setOpenTamu(false); })}>Simpan</Button></DialogFooter>
+                    <DialogFooter><Button variant="outline" onClick={() => setOpenTamu(false)}>Batal</Button><Button onClick={() => save("tamu", tamuForm, editingTamuId, () => { setTamuForm(EMPTY_TAMU); setEditingTamuId(null); setOpenTamu(false); })}>Simpan</Button></DialogFooter>
                   </DialogContent>
                 </Dialog>
               </div>
@@ -514,7 +479,7 @@ export default function TabHumas() {
                                 <Pencil className="w-3.5 h-3.5" />
                               </button>
                               <button
-                                onClick={() => deleteItem("/api/data/pembelajaran/tamu", row.id)}
+                                onClick={() => deleteItem("tamu", row.id)}
                                 className="p-1 text-slate-500 hover:text-red-600 transition-colors"
                               >
                                 <Trash className="w-3.5 h-3.5" />
@@ -574,7 +539,7 @@ export default function TabHumas() {
                       <div className="grid gap-2"><Label htmlFor="hpihak">Pihak Terlibat</Label><Input id="hpihak" value={humasForm.pihak} onChange={(e) => setHumasForm((prev) => ({ ...prev, pihak: e.target.value }))} /></div>
                       <div className="grid gap-2"><Label htmlFor="hhasil">Hasil/Keterangan</Label><Input id="hhasil" value={humasForm.hasil} onChange={(e) => setHumasForm((prev) => ({ ...prev, hasil: e.target.value }))} /></div>
                     </div>
-                    <DialogFooter><Button variant="outline" onClick={() => setOpenHumas(false)}>Batal</Button><Button onClick={() => save("/api/data/pembelajaran/humas", humasForm, editingHumasId, () => { setHumasForm(EMPTY_HUMAS); setEditingHumasId(null); setOpenHumas(false); })}>Simpan</Button></DialogFooter>
+                    <DialogFooter><Button variant="outline" onClick={() => setOpenHumas(false)}>Batal</Button><Button onClick={() => save("humas", humasForm, editingHumasId, () => { setHumasForm(EMPTY_HUMAS); setEditingHumasId(null); setOpenHumas(false); })}>Simpan</Button></DialogFooter>
                   </DialogContent>
                 </Dialog>
               </div>
@@ -619,7 +584,7 @@ export default function TabHumas() {
                                 <Pencil className="w-3.5 h-3.5" />
                               </button>
                               <button
-                                onClick={() => deleteItem("/api/data/pembelajaran/humas", row.id)}
+                                onClick={() => deleteItem("humas", row.id)}
                                 className="p-1 text-slate-500 hover:text-red-600 transition-colors"
                               >
                                 <Trash className="w-3.5 h-3.5" />
@@ -681,7 +646,7 @@ export default function TabHumas() {
                       <div className="grid gap-2"><Label htmlFor="ptindak">Tindak Lanjut</Label><Input id="ptindak" value={pengaduanForm.tindakLanjut} onChange={(e) => setPengaduanForm((prev) => ({ ...prev, tindakLanjut: e.target.value }))} /></div>
                       <div className="grid gap-2"><Label htmlFor="pstatus">Status</Label><Input id="pstatus" value={pengaduanForm.status} onChange={(e) => setPengaduanForm((prev) => ({ ...prev, status: e.target.value }))} /></div>
                     </div>
-                    <DialogFooter><Button variant="outline" onClick={() => setOpenPengaduan(false)}>Batal</Button><Button onClick={() => save("/api/data/pembelajaran/pengaduan", pengaduanForm, editingPengaduanId, () => { setPengaduanForm(EMPTY_PENGADUAN); setEditingPengaduanId(null); setOpenPengaduan(false); })}>Simpan</Button></DialogFooter>
+                    <DialogFooter><Button variant="outline" onClick={() => setOpenPengaduan(false)}>Batal</Button><Button onClick={() => save("pengaduan", pengaduanForm, editingPengaduanId, () => { setPengaduanForm(EMPTY_PENGADUAN); setEditingPengaduanId(null); setOpenPengaduan(false); })}>Simpan</Button></DialogFooter>
                   </DialogContent>
                 </Dialog>
               </div>
@@ -728,7 +693,7 @@ export default function TabHumas() {
                                 <Pencil className="w-3.5 h-3.5" />
                               </button>
                               <button
-                                onClick={() => deleteItem("/api/data/pembelajaran/pengaduan", row.id)}
+                                onClick={() => deleteItem("pengaduan", row.id)}
                                 className="p-1 text-slate-500 hover:text-red-600 transition-colors"
                               >
                                 <Trash className="w-3.5 h-3.5" />

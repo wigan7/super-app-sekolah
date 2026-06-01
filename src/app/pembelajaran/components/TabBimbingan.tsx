@@ -17,6 +17,12 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  getDatasetRows,
+  appendDatasetRow,
+  deleteDatasetRow,
+  importDatasetRows
+} from "@/lib/clientDb";
 
 type KasusRow = {
   id: string;
@@ -68,37 +74,25 @@ export default function TabBimbingan() {
   const [selectedKasusClass, setSelectedKasusClass] = useState<string>("");
   const [selectedBimbinganClass, setSelectedBimbinganClass] = useState<string>("");
 
-  const fetchRows = async () => {
+  const fetchRows = () => {
     try {
-      const [kasusRes, bimbinganRes] = await Promise.all([
-        fetch("/api/data/pembelajaran/kasus"),
-        fetch("/api/data/pembelajaran/bimbingan"),
-      ]);
+      const kasusData = getDatasetRows("pembelajaran", "kasus");
+      const bimbinganData = getDatasetRows("pembelajaran", "bimbingan");
 
-      if (kasusRes.ok) {
-        const data = await kasusRes.json();
-        setKasusRows(Array.isArray(data) ? data : []);
-      }
-
-      if (bimbinganRes.ok) {
-        const data = await bimbinganRes.json();
-        setBimbinganRows(Array.isArray(data) ? data : []);
-      }
+      setKasusRows(Array.isArray(kasusData) ? (kasusData as KasusRow[]) : []);
+      setBimbinganRows(Array.isArray(bimbinganData) ? (bimbinganData as BimbinganRow[]) : []);
     } catch (error) {
       console.error("Gagal memuat data bimbingan:", error);
     }
   };
 
-  const fetchStudents = async () => {
+  const fetchStudents = () => {
     try {
-      const res = await fetch("/api/kesiswaan");
-      if (res.ok) {
-        const data = await res.json();
-        if (Array.isArray(data)) {
-          setAllStudents(data);
-          const classes = Array.from(new Set(data.map((s: any) => s.kelas).filter(Boolean))) as string[];
-          setUniqueClasses(classes.sort());
-        }
+      const data = getDatasetRows("kesiswaan", "pesertadidik");
+      if (Array.isArray(data)) {
+        setAllStudents(data);
+        const classes = Array.from(new Set(data.map((s: any) => s.kelas).filter(Boolean))) as string[];
+        setUniqueClasses(classes.sort());
       }
     } catch (error) {
       console.error("Gagal memuat data siswa:", error);
@@ -111,80 +105,62 @@ export default function TabBimbingan() {
     fetchStudents();
   }, []);
 
-  const saveKasus = async () => {
+  const saveKasus = () => {
     const isEdit = !!editingKasusId;
-    const url = isEdit
-      ? `/api/data/pembelajaran/kasus?id=${editingKasusId}`
-      : "/api/data/pembelajaran/kasus";
-    const method = isEdit ? "PUT" : "POST";
+    try {
+      if (isEdit) {
+        const updated = kasusRows.map(r => r.id === editingKasusId ? { ...r, ...kasusForm } : r);
+        importDatasetRows("pembelajaran", "kasus", updated, "overwrite");
+      } else {
+        appendDatasetRow("pembelajaran", "kasus", kasusForm);
+      }
 
-    const res = await fetch(url, {
-      method,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(kasusForm),
-    });
-
-    if (!res.ok) {
-      throw new Error(`Gagal ${isEdit ? "memperbarui" : "menyimpan"} kasus`);
+      setKasusForm(EMPTY_KASUS);
+      setEditingKasusId(null);
+      setOpenKasus(false);
+      fetchRows();
+    } catch (err) {
+      console.error(err);
+      alert(`Gagal ${isEdit ? "memperbarui" : "menyimpan"} kasus`);
     }
-
-    setKasusForm(EMPTY_KASUS);
-    setEditingKasusId(null);
-    setOpenKasus(false);
-    await fetchRows();
   };
 
-  const deleteKasus = async (id: string) => {
+  const deleteKasus = (id: string) => {
     if (!confirm("Apakah Anda yakin ingin menghapus data kasus ini?")) return;
     try {
-      const res = await fetch(`/api/data/pembelajaran/kasus?id=${id}`, {
-        method: "DELETE",
-      });
-      if (!res.ok) {
-        alert("Gagal menghapus data kasus.");
-        return;
-      }
-      await fetchRows();
+      deleteDatasetRow("pembelajaran", "kasus", id);
+      fetchRows();
     } catch (error) {
       console.error(error);
       alert("Terjadi kesalahan saat menghapus data.");
     }
   };
 
-  const saveBimbingan = async () => {
+  const saveBimbingan = () => {
     const isEdit = !!editingBimbinganId;
-    const url = isEdit
-      ? `/api/data/pembelajaran/bimbingan?id=${editingBimbinganId}`
-      : "/api/data/pembelajaran/bimbingan";
-    const method = isEdit ? "PUT" : "POST";
+    try {
+      if (isEdit) {
+        const updated = bimbinganRows.map(r => r.id === editingBimbinganId ? { ...r, ...bimbinganForm } : r);
+        importDatasetRows("pembelajaran", "bimbingan", updated, "overwrite");
+      } else {
+        appendDatasetRow("pembelajaran", "bimbingan", bimbinganForm);
+      }
 
-    const res = await fetch(url, {
-      method,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(bimbinganForm),
-    });
-
-    if (!res.ok) {
-      throw new Error(`Gagal ${isEdit ? "memperbarui" : "menyimpan"} bimbingan`);
+      setBimbinganForm(EMPTY_BIMBINGAN);
+      setEditingBimbinganId(null);
+      setOpenBimbingan(false);
+      fetchRows();
+    } catch (err) {
+      console.error(err);
+      alert(`Gagal ${isEdit ? "memperbarui" : "menyimpan"} bimbingan`);
     }
-
-    setBimbinganForm(EMPTY_BIMBINGAN);
-    setEditingBimbinganId(null);
-    setOpenBimbingan(false);
-    await fetchRows();
   };
 
-  const deleteBimbingan = async (id: string) => {
+  const deleteBimbingan = (id: string) => {
     if (!confirm("Apakah Anda yakin ingin menghapus data bimbingan ini?")) return;
     try {
-      const res = await fetch(`/api/data/pembelajaran/bimbingan?id=${id}`, {
-        method: "DELETE",
-      });
-      if (!res.ok) {
-        alert("Gagal menghapus data bimbingan.");
-        return;
-      }
-      await fetchRows();
+      deleteDatasetRow("pembelajaran", "bimbingan", id);
+      fetchRows();
     } catch (error) {
       console.error(error);
       alert("Terjadi kesalahan saat menghapus data.");

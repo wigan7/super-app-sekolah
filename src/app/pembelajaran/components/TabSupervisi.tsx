@@ -17,6 +17,13 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  getDatasetRows,
+  appendDatasetRow,
+  deleteDatasetRow,
+  importDatasetRows,
+  getIdentitas
+} from "@/lib/clientDb";
 
 type SupervisiRow = {
   id: string;
@@ -76,34 +83,22 @@ export default function TabSupervisi() {
   const [editingSupervisiId, setEditingSupervisiId] = useState<string | null>(null);
   const [editingAdminId, setEditingAdminId] = useState<string | null>(null);
 
-  const fetchRows = async () => {
+  const fetchRows = () => {
     try {
-      const [supervisiRes, adminRes] = await Promise.all([
-        fetch("/api/data/pembelajaran/supervisi"),
-        fetch("/api/data/pembelajaran/administrasi"),
-      ]);
-
-      if (supervisiRes.ok) {
-        const data = await supervisiRes.json();
-        setSupervisiRows(Array.isArray(data) ? data : []);
-      }
-
-      if (adminRes.ok) {
-        const data = await adminRes.json();
-        setAdministrasiRows(Array.isArray(data) ? data : []);
-      }
+      const supervisiData = getDatasetRows("pembelajaran", "supervisi");
+      const adminData = getDatasetRows("pembelajaran", "administrasi");
+      
+      setSupervisiRows(Array.isArray(supervisiData) ? (supervisiData as SupervisiRow[]) : []);
+      setAdministrasiRows(Array.isArray(adminData) ? (adminData as AdministrasiRow[]) : []);
     } catch (error) {
       console.error("Gagal memuat data supervisi:", error);
     }
   };
 
-  const fetchPegawaiList = async () => {
+  const fetchPegawaiList = () => {
     try {
-      const res = await fetch("/api/data/kepegawaian/pegawai");
-      if (res.ok) {
-        const data = await res.json();
-        setPegawaiList(Array.isArray(data) ? data : []);
-      }
+      const data = getDatasetRows("kepegawaian", "pegawai");
+      setPegawaiList(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Gagal memuat list pegawai:", error);
     }
@@ -130,13 +125,10 @@ export default function TabSupervisi() {
     fetchRows();
     fetchPegawaiList();
 
-    const fetchSchoolName = async () => {
+    const fetchSchoolName = () => {
       try {
-        const res = await fetch("/api/identitas");
-        if (res.ok) {
-          const data = await res.json();
-          setNamaSekolah(data?.namaSekolah || "");
-        }
+        const data = getIdentitas();
+        setNamaSekolah(data?.namaSekolah || "");
       } catch (error) {
         console.error("Gagal memuat nama sekolah di supervisi:", error);
       }
@@ -144,47 +136,39 @@ export default function TabSupervisi() {
     fetchSchoolName();
   }, []);
 
-  const saveSupervisi = async () => {
+  const saveSupervisi = () => {
     const isEdit = !!editingSupervisiId;
-    const url = isEdit
-      ? `/api/data/pembelajaran/supervisi?id=${editingSupervisiId}`
-      : "/api/data/pembelajaran/supervisi";
-    const method = isEdit ? "PUT" : "POST";
+    
+    try {
+      if (isEdit) {
+        const updated = supervisiRows.map(r => r.id === editingSupervisiId ? { ...r, ...supervisiForm } : r);
+        importDatasetRows("pembelajaran", "supervisi", updated, "overwrite");
+      } else {
+        appendDatasetRow("pembelajaran", "supervisi", supervisiForm);
+      }
 
-    const res = await fetch(url, {
-      method,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(supervisiForm),
-    });
-
-    if (!res.ok) {
-      throw new Error(`Gagal ${isEdit ? "memperbarui" : "menyimpan"} supervisi`);
+      setSupervisiForm(EMPTY_SUPERVISI);
+      setEditingSupervisiId(null);
+      setOpenSupervisi(false);
+      fetchRows();
+    } catch (err) {
+      console.error(err);
+      alert(`Gagal ${isEdit ? "memperbarui" : "menyimpan"} supervisi`);
     }
-
-    setSupervisiForm(EMPTY_SUPERVISI);
-    setEditingSupervisiId(null);
-    setOpenSupervisi(false);
-    await fetchRows();
   };
 
-  const deleteSupervisi = async (id: string) => {
+  const deleteSupervisi = (id: string) => {
     if (!confirm("Apakah Anda yakin ingin menghapus data supervisi ini?")) return;
     try {
-      const res = await fetch(`/api/data/pembelajaran/supervisi?id=${id}`, {
-        method: "DELETE",
-      });
-      if (!res.ok) {
-        alert("Gagal menghapus data supervisi.");
-        return;
-      }
-      await fetchRows();
+      deleteDatasetRow("pembelajaran", "supervisi", id);
+      fetchRows();
     } catch (error) {
       console.error(error);
       alert("Terjadi kesalahan saat menghapus data.");
     }
   };
 
-  const saveAdministrasi = async () => {
+  const saveAdministrasi = () => {
     const payload = {
       guru: adminForm.guru,
       mapel: adminForm.mapel,
@@ -198,38 +182,29 @@ export default function TabSupervisi() {
     };
 
     const isEdit = !!editingAdminId;
-    const url = isEdit
-      ? `/api/data/pembelajaran/administrasi?id=${editingAdminId}`
-      : "/api/data/pembelajaran/administrasi";
-    const method = isEdit ? "PUT" : "POST";
+    try {
+      if (isEdit) {
+        const updated = administrasiRows.map(r => r.id === editingAdminId ? { ...r, ...payload } : r);
+        importDatasetRows("pembelajaran", "administrasi", updated, "overwrite");
+      } else {
+        appendDatasetRow("pembelajaran", "administrasi", payload);
+      }
 
-    const res = await fetch(url, {
-      method,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-
-    if (!res.ok) {
-      throw new Error(`Gagal ${isEdit ? "memperbarui" : "menyimpan"} administrasi`);
+      setAdminForm(EMPTY_ADMIN);
+      setEditingAdminId(null);
+      setOpenAdmin(false);
+      fetchRows();
+    } catch (err) {
+      console.error(err);
+      alert(`Gagal ${isEdit ? "memperbarui" : "menyimpan"} administrasi`);
     }
-
-    setAdminForm(EMPTY_ADMIN);
-    setEditingAdminId(null);
-    setOpenAdmin(false);
-    await fetchRows();
   };
 
-  const deleteAdministrasi = async (id: string) => {
+  const deleteAdministrasi = (id: string) => {
     if (!confirm("Apakah Anda yakin ingin menghapus data administrasi ini?")) return;
     try {
-      const res = await fetch(`/api/data/pembelajaran/administrasi?id=${id}`, {
-        method: "DELETE",
-      });
-      if (!res.ok) {
-        alert("Gagal menghapus data administrasi.");
-        return;
-      }
-      await fetchRows();
+      deleteDatasetRow("pembelajaran", "administrasi", id);
+      fetchRows();
     } catch (error) {
       console.error(error);
       alert("Terjadi kesalahan saat menghapus data.");

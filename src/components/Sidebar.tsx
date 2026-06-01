@@ -34,6 +34,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { getIdentitas, resetSchoolData, getSchoolData, writeSchoolData } from "@/lib/clientDb";
 
 const navItems = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
@@ -51,13 +52,10 @@ export function Sidebar() {
   const [identitas, setIdentitas] = useState<{ namaKepalaSekolah?: string; namaSekolah?: string; fotoKepalaSekolah?: string }>({});
 
   useEffect(() => {
-    const fetchIdentitas = async () => {
+    const fetchIdentitas = () => {
       try {
-        const res = await fetch("/api/identitas");
-        if (res.ok) {
-          const data = await res.json();
-          setIdentitas(data || {});
-        }
+        const data = getIdentitas();
+        setIdentitas(data || {});
       } catch (error) {
         console.error("Gagal memuat data identitas di sidebar:", error);
       }
@@ -95,28 +93,36 @@ export function Sidebar() {
   const [resetError, setResetError] = useState("");
 
   const handleExport = () => {
-    window.location.href = "/api/backup";
+    try {
+      const data = getSchoolData();
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      const dateStr = new Date().toISOString().split("T")[0];
+      a.download = `backup-super-app-${dateStr}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Gagal melakukan export:", err);
+      alert("Gagal mengunduh backup data.");
+    }
   };
 
-  const handleReset = async () => {
+  const handleReset = () => {
     if (resetConfirmText !== "RESET") return;
 
     setResetting(true);
     setResetError("");
     try {
-      const res = await fetch("/api/reset", {
-        method: "POST",
-      });
-
-      if (res.ok) {
-        setResetSuccess(true);
-        setTimeout(() => {
-          setOpenReset(false);
-          window.location.reload();
-        }, 1500);
-      } else {
-        setResetError("Gagal mereset data.");
-      }
+      resetSchoolData();
+      setResetSuccess(true);
+      setTimeout(() => {
+        setOpenReset(false);
+        window.location.reload();
+      }, 1500);
     } catch (err) {
       setResetError("Terjadi kesalahan koneksi.");
     } finally {
@@ -148,21 +154,17 @@ export function Sidebar() {
         }
 
         setImporting(true);
-        const res = await fetch("/api/backup", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(parsed),
-        });
+        
+        // Simulasikan delay sedikit agar UI loading terlihat
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        
+        writeSchoolData(parsed);
 
-        if (res.ok) {
-          setImportSuccess(true);
-          setTimeout(() => {
-            setOpenBackup(false);
-            window.location.reload();
-          }, 1500);
-        } else {
-          setFileError("Gagal mengimpor data. Server menolak berkas.");
-        }
+        setImportSuccess(true);
+        setTimeout(() => {
+          setOpenBackup(false);
+          window.location.reload();
+        }, 1500);
       } catch (err) {
         setFileError("Berkas rusak atau bukan format JSON yang valid.");
       } finally {

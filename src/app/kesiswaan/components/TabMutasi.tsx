@@ -11,6 +11,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import MutasiDialog from "./MutasiDialog";
+import { getDatasetRows } from "@/lib/clientDb";
 
 type MutasiMasuk = {
   id: string;
@@ -34,29 +35,19 @@ export default function TabMutasi() {
   const [masukRows, setMasukRows] = useState<MutasiMasuk[]>([]);
   const [keluarRows, setKeluarRows] = useState<MutasiKeluar[]>([]);
 
-  const fetchRows = async () => {
+  const fetchRows = () => {
     try {
-      const [masukRes, keluarRes] = await Promise.all([
-        fetch("/api/data/kesiswaan/mutasiMasuk"),
-        fetch("/api/data/kesiswaan/mutasiKeluar"),
-      ]);
+      const masukData = getDatasetRows("kesiswaan", "mutasiMasuk");
+      const keluarData = getDatasetRows("kesiswaan", "mutasiKeluar");
 
-      if (masukRes.ok) {
-        const data = await masukRes.json();
-        setMasukRows(Array.isArray(data) ? data : []);
-      }
-
-      if (keluarRes.ok) {
-        const data = await keluarRes.json();
-        setKeluarRows(Array.isArray(data) ? data : []);
-      }
+      setMasukRows(Array.isArray(masukData) ? (masukData as MutasiMasuk[]) : []);
+      setKeluarRows(Array.isArray(keluarData) ? (keluarData as MutasiKeluar[]) : []);
     } catch (error) {
       console.error("Gagal memuat data mutasi:", error);
     }
   };
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchRows();
   }, []);
 
