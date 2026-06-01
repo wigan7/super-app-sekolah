@@ -19,6 +19,12 @@ export default function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!auth) {
+      setError("Konfigurasi Firebase belum lengkap. Hubungi admin untuk pengaturan environment Vercel.");
+      return;
+    }
+
     setLoading(true);
     setError("");
     

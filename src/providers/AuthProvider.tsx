@@ -26,10 +26,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
   useEffect(() => {
+    if (!auth) {
+      setLoading(false);
+      return;
+    }
+
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
       
-      if (currentUser) {
+      if (currentUser && db) {
         try {
           const colRef = collection(db, currentUser.uid);
           const snapshot = await getDocs(colRef);
@@ -57,6 +62,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const logout = useCallback(async () => {
+    if (!auth) {
+      router.push("/login");
+      return;
+    }
+
     await signOut(auth);
     router.push("/login");
   }, [router]);
