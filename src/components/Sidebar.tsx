@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useSidebar } from "@/providers/SidebarProvider";
+import { useAuth } from "@/providers/AuthProvider";
 import { motion } from "framer-motion";
 import { 
   LayoutDashboard, 
@@ -20,7 +21,8 @@ import {
   Trash2,
   PanelLeft,
   PanelLeftClose,
-  UserCircle
+  UserCircle,
+  LogOut
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import {
@@ -44,8 +46,9 @@ const navItems = [
 
 export function Sidebar() {
   const pathname = usePathname();
-  const [identitas, setIdentitas] = useState<{ namaKepalaSekolah?: string; namaSekolah?: string; fotoKepalaSekolah?: string }>({});
   const { isOpen, toggleSidebar } = useSidebar();
+  const { headmasterData, logout } = useAuth();
+  const [identitas, setIdentitas] = useState<{ namaKepalaSekolah?: string; namaSekolah?: string; fotoKepalaSekolah?: string }>({});
 
   useEffect(() => {
     const fetchIdentitas = async () => {
@@ -74,9 +77,9 @@ export function Sidebar() {
     return (cleanParts[0][0] + cleanParts[1][0]).toUpperCase();
   };
 
-  const namaKS = identitas.namaKepalaSekolah || "(Belum input Nama Kepala Sekolah)";
+  const namaKS = headmasterData?.nama || identitas.namaKepalaSekolah || "(Belum input Nama Kepala Sekolah)";
   const namaSekolah = identitas.namaSekolah || "(Belum input Nama Sekolah)";
-  const initials = identitas.namaKepalaSekolah ? getInitials(identitas.namaKepalaSekolah) : "?";
+  const initials = getInitials(headmasterData?.nama || identitas.namaKepalaSekolah);
 
   // Backup & Import States
   const [openBackup, setOpenBackup] = useState(false);
@@ -168,6 +171,10 @@ export function Sidebar() {
     };
     reader.readAsText(file);
   };
+
+  if (pathname === "/login") {
+    return null;
+  }
 
   return (
     <>
@@ -396,23 +403,32 @@ export function Sidebar() {
       </div>
 
       <div className="p-4 border-t border-slate-200/60 mt-auto">
-        <Link href="/identitas" className="flex items-center gap-3 px-3 py-2 overflow-hidden bg-white/50 hover:bg-slate-100 rounded-xl border border-slate-200/50 transition-colors cursor-pointer group">
-          <div className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center shrink-0 overflow-hidden relative border border-slate-300">
-            {identitas.fotoKepalaSekolah ? (
-              <Image src={identitas.fotoKepalaSekolah} alt="Foto Profil" fill className="object-cover" />
-            ) : (
-              <span className="text-primary font-bold text-xs">{initials}</span>
-            )}
-          </div>
-          <div className="flex flex-col min-w-0">
-            <span className="text-xs font-semibold text-slate-800 truncate group-hover:text-primary transition-colors" title={namaKS}>
-              {namaKS}
-            </span>
-            <span className="text-[10px] text-slate-500 truncate" title={namaSekolah}>
-              {namaSekolah}
-            </span>
-          </div>
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link href="/identitas" className="flex-1 flex items-center gap-3 px-3 py-2 overflow-hidden bg-white/50 hover:bg-slate-100 rounded-xl border border-slate-200/50 transition-colors cursor-pointer group min-w-0">
+            <div className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center shrink-0 overflow-hidden relative border border-slate-300">
+              {identitas.fotoKepalaSekolah ? (
+                <Image src={identitas.fotoKepalaSekolah} alt="Foto Profil" fill className="object-cover" />
+              ) : (
+                <span className="text-primary font-bold text-xs">{initials}</span>
+              )}
+            </div>
+            <div className="flex flex-col min-w-0">
+              <span className="text-xs font-semibold text-slate-800 truncate group-hover:text-primary transition-colors" title={namaKS}>
+                {namaKS}
+              </span>
+              <span className="text-[10px] text-slate-500 truncate" title={namaSekolah}>
+                {namaSekolah}
+              </span>
+            </div>
+          </Link>
+          <button
+            onClick={logout}
+            title="Keluar"
+            className="shrink-0 w-9 h-9 flex items-center justify-center rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 border border-transparent hover:border-rose-100 transition-all active:scale-95 cursor-pointer"
+          >
+            <LogOut className="w-4 h-4" />
+          </button>
+        </div>
       </div>
         </div>
       </motion.aside>

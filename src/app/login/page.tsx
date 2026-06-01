@@ -1,0 +1,159 @@
+"use client";
+
+import { useState } from "react";
+import { motion } from "framer-motion";
+import { Lock, Mail, Loader2, LogIn, Key, AlertTriangle } from "lucide-react";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from "@/lib/firebase";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+
+export default function LoginPage() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+    
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      router.push("/");
+    } catch (err: any) {
+      console.error(err);
+      setError("Email atau Password salah. Silakan coba lagi.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-linear-to-tr from-slate-50 via-indigo-50 to-purple-50 relative overflow-hidden">
+      {/* Background Ornaments */}
+      <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-indigo-300/30 blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[600px] h-[600px] rounded-full bg-purple-300/30 blur-[150px] pointer-events-none" />
+      <div className="absolute top-[40%] right-[10%] w-[300px] h-[300px] rounded-full bg-pink-300/20 blur-[100px] pointer-events-none" />
+
+      <motion.div
+        initial={{ opacity: 0, y: 20, scale: 0.95 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.5, type: "spring", bounce: 0.4 }}
+        className="relative z-10 w-full max-w-md p-8 bg-white/70 backdrop-blur-2xl rounded-[2rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] border border-white/50"
+      >
+        <div className="flex flex-col items-center mb-8">
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.2, type: "spring", bounce: 0.5 }}
+            className="w-20 h-20 bg-linear-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-500/30 mb-6"
+          >
+            <Lock className="w-10 h-10 text-white" />
+          </motion.div>
+          <h1 className="text-3xl font-extrabold text-transparent bg-clip-text bg-linear-to-r from-indigo-900 to-purple-900 mb-2 text-center">
+            Super App Sekolah
+          </h1>
+          <p className="text-slate-500 font-medium text-center text-sm">
+            Silakan login untuk mengakses dashboard manajemen sekolah.
+          </p>
+        </div>
+
+        {error && (
+          <motion.div 
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            className="mb-6 p-4 bg-rose-50 border border-rose-100 rounded-xl flex items-start gap-3 text-rose-600"
+          >
+            <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5" />
+            <span className="text-sm font-medium">{error}</span>
+          </motion.div>
+        )}
+
+        <form onSubmit={handleLogin} className="space-y-5">
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-slate-700 uppercase tracking-wider ml-1">Email Kepala Sekolah</label>
+            <div className="relative group">
+              <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none text-slate-400 group-focus-within:text-indigo-600 transition-colors">
+                <Mail className="w-5 h-5" />
+              </div>
+              <Input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="kepsek@sekolah.sch.id"
+                className="pl-12 h-14 rounded-2xl bg-white/50 border-slate-200/60 focus-visible:ring-indigo-500 focus-visible:bg-white text-base transition-all"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-slate-700 uppercase tracking-wider ml-1">Password</label>
+            <div className="relative group">
+              <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none text-slate-400 group-focus-within:text-indigo-600 transition-colors">
+                <Key className="w-5 h-5" />
+              </div>
+              <Input
+                type="password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                className="pl-12 h-14 rounded-2xl bg-white/50 border-slate-200/60 focus-visible:ring-indigo-500 focus-visible:bg-white text-base transition-all"
+              />
+            </div>
+          </div>
+
+          <Button
+            type="submit"
+            disabled={loading}
+            className="w-full h-14 rounded-2xl bg-linear-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold text-base shadow-xl shadow-indigo-500/20 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+          >
+            {loading ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" />
+                Memverifikasi...
+              </>
+            ) : (
+              <>
+                <LogIn className="w-5 h-5" />
+                Login Sekarang
+              </>
+            )}
+          </Button>
+        </form>
+
+        <div className="mt-8 text-center border-t border-slate-200/50 pt-6">
+          <p className="text-xs text-slate-400 font-medium flex items-center justify-center gap-2">
+            <Shield className="w-4 h-4" />
+            Sistem Informasi Terenkripsi & Aman
+          </p>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
+function Shield(props: any) {
+  return (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" />
+    </svg>
+  );
+}

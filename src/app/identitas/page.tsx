@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
+import { useAuth } from "@/providers/AuthProvider";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import { 
@@ -43,6 +44,7 @@ const INITIAL_STATE = {
 };
 
 export default function IdentitasPage() {
+  const { headmasterData } = useAuth();
   const [form, setForm] = useState(INITIAL_STATE);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -219,9 +221,11 @@ export default function IdentitasPage() {
                       <Input
                         id="namaKepalaSekolah"
                         placeholder="Nama Kepala Sekolah beserta gelar"
-                        value={form.namaKepalaSekolah}
+                        value={headmasterData?.nama || form.namaKepalaSekolah}
                         onChange={(e) => handleInputChange("namaKepalaSekolah", e.target.value)}
-                        className="bg-slate-50/30 focus-visible:bg-white transition-colors"
+                        disabled={true}
+                        className="bg-slate-100 border-slate-200 text-slate-500 cursor-not-allowed opacity-100"
+                        title="Dikunci dari akun login"
                       />
                     </div>
                   </div>
@@ -231,9 +235,11 @@ export default function IdentitasPage() {
                     <Input
                       id="nipKepalaSekolah"
                       placeholder="Masukkan NIP (jika ada)"
-                      value={form.nipKepalaSekolah}
+                      value={headmasterData?.nip || form.nipKepalaSekolah}
                       onChange={(e) => handleInputChange("nipKepalaSekolah", e.target.value)}
-                      className="bg-slate-50/30 focus-visible:bg-white transition-colors"
+                      disabled={true}
+                      className="bg-slate-100 border-slate-200 text-slate-500 cursor-not-allowed opacity-100"
+                      title="Dikunci dari akun login"
                     />
                   </div>
 
