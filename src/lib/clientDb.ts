@@ -42,6 +42,7 @@ type SchoolData = {
   };
   identitas: {
     fotoKepalaSekolah: string;
+    logoSekolah: string;
     namaKepalaSekolah: string;
     nipKepalaSekolah: string;
     jabatanKepalaSekolah: string;
@@ -98,6 +99,7 @@ const DEFAULT_SCHOOL_DATA: SchoolData = {
   },
   identitas: {
     fotoKepalaSekolah: "",
+    logoSekolah: "",
     namaKepalaSekolah: "",
     nipKepalaSekolah: "",
     jabatanKepalaSekolah: "",

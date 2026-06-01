@@ -22,7 +22,8 @@ import {
   PanelLeft,
   PanelLeftClose,
   UserCircle,
-  LogOut
+  LogOut,
+  Printer
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import {
@@ -43,6 +44,7 @@ const navItems = [
   { name: "Pembelajaran", href: "/pembelajaran", icon: BookOpen },
   { name: "PKKS", href: "/pkks", icon: FileCheck },
   { name: "Identitas", href: "/identitas", icon: School },
+  { name: "Cetak Dokumen", href: "/cetak", icon: Printer },
 ];
 
 export function Sidebar() {
@@ -183,7 +185,7 @@ export function Sidebar() {
       {!isOpen && (
         <button 
           onClick={toggleSidebar}
-          className="fixed top-4 left-4 z-50 p-2.5 rounded-xl ios-glass border border-slate-200/60 shadow-[0_8px_30px_rgb(0,0,0,0.08)] text-slate-600 hover:text-slate-900 active:scale-95 transition-all cursor-pointer"
+          className="fixed top-4 left-4 z-50 p-2.5 rounded-xl ios-glass border border-slate-200/60 shadow-[0_8px_30px_rgb(0,0,0,0.08)] text-slate-600 hover:text-slate-900 active:scale-95 transition-all cursor-pointer print:hidden"
         >
           <PanelLeft className="w-5 h-5" />
         </button>
@@ -192,7 +194,7 @@ export function Sidebar() {
       <motion.aside 
         initial={false}
         animate={{ width: isOpen ? 224 : 0, opacity: isOpen ? 1 : 0 }}
-        className="border-r border-slate-200/60 ios-glass h-screen sticky top-0 flex flex-col z-40 overflow-hidden shrink-0"
+        className="border-r border-slate-200/60 ios-glass h-screen sticky top-0 flex flex-col z-40 overflow-hidden shrink-0 print:hidden"
       >
         <div className="w-56 flex flex-col h-full">
           <div className="p-5 flex items-center justify-between">

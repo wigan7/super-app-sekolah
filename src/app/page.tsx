@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, Variants } from "framer-motion";
+import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, UserCog, FileCheck } from "lucide-react";
 import { getDataKesiswaan, getDataKepegawaian, getDataPkks, getIdentitas } from "@/lib/clientDb";
@@ -35,7 +36,7 @@ export default function Dashboard() {
     totalGuru: "0",
     pkksProgress: "0%",
   });
-  const [identitas, setIdentitas] = useState<{ namaKepalaSekolah?: string; namaSekolah?: string }>({});
+  const [identitas, setIdentitas] = useState<{ namaKepalaSekolah?: string; namaSekolah?: string; logoSekolah?: string }>({});
 
   useEffect(() => {
     const fetchData = () => {
@@ -94,11 +95,12 @@ export default function Dashboard() {
   return (
     <div className="flex-1 p-4 md:p-8">
       <div className="max-w-6xl mx-auto space-y-8">
-        <header>
+        <header className="flex flex-col-reverse md:flex-row md:items-center justify-between gap-4">
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
+            className="flex-1"
           >
             <h1 className="text-3xl font-bold tracking-tight text-slate-900">
               Selamat Datang, {identitas.namaKepalaSekolah || "(Belum input Nama Kepala Sekolah)"}
@@ -107,6 +109,17 @@ export default function Dashboard() {
               Berikut adalah ringkasan informasi {identitas.namaSekolah || "(Belum input Nama Sekolah)"} hari ini.
             </p>
           </motion.div>
+          {identitas.logoSekolah && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="relative w-20 h-20 rounded-2xl bg-white border border-slate-200/85 p-2.5 shadow-sm flex items-center justify-center shrink-0"
+            >
+              <div className="relative w-full h-full">
+                <Image src={identitas.logoSekolah} alt="Logo Sekolah" fill className="object-contain" />
+              </div>
+            </motion.div>
+          )}
         </header>
 
         <motion.div

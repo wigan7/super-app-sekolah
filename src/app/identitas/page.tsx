@@ -27,6 +27,7 @@ import { getIdentitas, updateIdentitas } from "@/lib/clientDb";
 
 const INITIAL_STATE = {
   fotoKepalaSekolah: "",
+  logoSekolah: "",
   namaKepalaSekolah: "",
   nipKepalaSekolah: "",
   jabatanKepalaSekolah: "",
@@ -51,6 +52,7 @@ export default function IdentitasPage() {
   const [saving, setSaving] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const logoInputRef = useRef<HTMLInputElement>(null);
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -85,6 +87,45 @@ export default function IdentitasPage() {
 
         const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
         setForm((prev) => ({ ...prev, fotoKepalaSekolah: dataUrl }));
+      };
+      img.src = event.target?.result as string;
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new window.Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const MAX_WIDTH = 300;
+        const MAX_HEIGHT = 300;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > MAX_WIDTH) {
+            height *= MAX_WIDTH / width;
+            width = MAX_WIDTH;
+          }
+        } else {
+          if (height > MAX_HEIGHT) {
+            width *= MAX_HEIGHT / height;
+            height = MAX_HEIGHT;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        ctx?.drawImage(img, 0, 0, width, height);
+
+        const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
+        setForm((prev) => ({ ...prev, logoSekolah: dataUrl }));
       };
       img.src = event.target?.result as string;
     };
@@ -180,9 +221,33 @@ export default function IdentitasPage() {
         <form onSubmit={handleSave} className="space-y-8">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             
-            {/* Left Column: Headmaster Profile Card */}
-            <div className="lg:col-span-1 space-y-6">
-              <Card className="overflow-hidden sticky top-8">
+            {/* Left Column: Headmaster Profile & Logo Cards */}
+            <div className="lg:col-span-1 space-y-6 lg:sticky lg:top-8 self-start">
+              {/* Logo Sekolah Card */}
+              <Card className="overflow-hidden">
+                <div className="h-2 bg-gradient-to-r from-emerald-500 via-teal-500 to-indigo-500" />
+                <CardHeader className="text-center pb-4">
+                  <div 
+                    onClick={() => logoInputRef.current?.click()}
+                    className="mx-auto w-24 h-24 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400 mb-4 border border-slate-200/60 shadow-inner relative overflow-hidden group cursor-pointer"
+                  >
+                    {form.logoSekolah ? (
+                      <Image src={form.logoSekolah} alt="Logo Sekolah" fill className="object-contain p-2" />
+                    ) : (
+                      <School className="w-12 h-12 text-slate-300" />
+                    )}
+                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Camera className="w-6 h-6 text-white" />
+                    </div>
+                  </div>
+                  <input type="file" accept="image/*" className="hidden" ref={logoInputRef} onChange={handleLogoUpload} />
+                  <CardTitle className="text-lg">Logo Sekolah</CardTitle>
+                  <CardDescription>Logo resmi instansi sekolah</CardDescription>
+                </CardHeader>
+              </Card>
+
+              {/* Headmaster Profile Card */}
+              <Card className="overflow-hidden">
                 <div className="h-2 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500" />
                 <CardHeader className="text-center pb-2">
                   <div 

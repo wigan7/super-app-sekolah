@@ -44,6 +44,8 @@ type SchoolData = {
     links: Record<string, string>;
   };
   identitas: {
+    fotoKepalaSekolah: string;
+    logoSekolah: string;
     namaKepalaSekolah: string;
     nipKepalaSekolah: string;
     jabatanKepalaSekolah: string;
@@ -99,6 +101,8 @@ const DEFAULT_SCHOOL_DATA: SchoolData = {
     links: {},
   },
   identitas: {
+    fotoKepalaSekolah: "",
+    logoSekolah: "",
     namaKepalaSekolah: "",
     nipKepalaSekolah: "",
     jabatanKepalaSekolah: "",
