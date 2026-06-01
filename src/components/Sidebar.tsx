@@ -188,13 +188,10 @@ export function Sidebar() {
         <div className="w-56 flex flex-col h-full">
           <div className="p-5 flex items-center justify-between">
             <div className="flex-1 flex justify-center items-center pr-2">
-              <Image 
-                src="/logo.png" 
-                alt="Super App Sekolah Logo" 
-                width={400} 
-                height={200} 
+              <img 
+                src="/logo.png?v=2" 
+                alt="Pak Candra Super App Logo" 
                 className="object-contain w-full h-auto max-w-[160px] drop-shadow-sm" 
-                priority
               />
             </div>
             <button 

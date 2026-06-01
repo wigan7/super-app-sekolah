@@ -2,7 +2,7 @@ import PembelajaranTabs from "./components/PembelajaranTabs";
 import { BookOpen } from "lucide-react";
 
 export const metadata = {
-  title: "Pembelajaran & Kurikulum | Super App Sekolah",
+  title: "Pembelajaran & Kurikulum | Pak Candra Super App",
   description: "Manajemen pembelajaran, supervisi, bimbingan, dan kurikulum",
 };
 
