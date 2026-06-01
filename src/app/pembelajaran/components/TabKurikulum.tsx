@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, Pencil, Trash } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -64,11 +64,14 @@ const EMPTY_TUGAS = {
 export default function TabKurikulum() {
   const [pencapaianRows, setPencapaianRows] = useState<PencapaianRow[]>([]);
   const [tugasRows, setTugasRows] = useState<TugasRow[]>([]);
+  const [pegawaiList, setPegawaiList] = useState<any[]>([]);
   const [openPencapaian, setOpenPencapaian] = useState(false);
   const [openTugas, setOpenTugas] = useState(false);
   const [pencapaianForm, setPencapaianForm] = useState(EMPTY_PENCAPAIAN);
   const [tugasForm, setTugasForm] = useState(EMPTY_TUGAS);
   const [namaSekolah, setNamaSekolah] = useState("");
+  const [editingPencapaianId, setEditingPencapaianId] = useState<string | null>(null);
+  const [editingTugasId, setEditingTugasId] = useState<string | null>(null);
 
   const fetchRows = async () => {
     try {
@@ -91,9 +94,22 @@ export default function TabKurikulum() {
     }
   };
 
+  const fetchPegawaiList = async () => {
+    try {
+      const res = await fetch("/api/data/kepegawaian/pegawai");
+      if (res.ok) {
+        const data = await res.json();
+        setPegawaiList(Array.isArray(data) ? data : []);
+      }
+    } catch (error) {
+      console.error("Gagal memuat list pegawai:", error);
+    }
+  };
+
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchRows();
+    fetchPegawaiList();
 
     const fetchSchoolName = async () => {
       try {
@@ -117,19 +133,43 @@ export default function TabKurikulum() {
       color: pencapaianForm.color,
     };
 
-    const res = await fetch("/api/data/pembelajaran/kurikulumPencapaian", {
-      method: "POST",
+    const isEdit = !!editingPencapaianId;
+    const url = isEdit
+      ? `/api/data/pembelajaran/kurikulumPencapaian?id=${editingPencapaianId}`
+      : "/api/data/pembelajaran/kurikulumPencapaian";
+    const method = isEdit ? "PUT" : "POST";
+
+    const res = await fetch(url, {
+      method,
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
 
     if (!res.ok) {
-      throw new Error("Gagal menyimpan pencapaian");
+      throw new Error(`Gagal ${isEdit ? "memperbarui" : "menyimpan"} pencapaian`);
     }
 
     setPencapaianForm(EMPTY_PENCAPAIAN);
+    setEditingPencapaianId(null);
     setOpenPencapaian(false);
     await fetchRows();
+  };
+
+  const deletePencapaian = async (id: string) => {
+    if (!confirm("Apakah Anda yakin ingin menghapus data pencapaian kurikulum ini?")) return;
+    try {
+      const res = await fetch(`/api/data/pembelajaran/kurikulumPencapaian?id=${id}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) {
+        alert("Gagal menghapus data pencapaian.");
+        return;
+      }
+      await fetchRows();
+    } catch (error) {
+      console.error(error);
+      alert("Terjadi kesalahan saat menghapus data.");
+    }
   };
 
   const saveTugas = async () => {
@@ -138,19 +178,43 @@ export default function TabKurikulum() {
       jam: Number(tugasForm.jam || 0),
     };
 
-    const res = await fetch("/api/data/pembelajaran/pembagianTugas", {
-      method: "POST",
+    const isEdit = !!editingTugasId;
+    const url = isEdit
+      ? `/api/data/pembelajaran/pembagianTugas?id=${editingTugasId}`
+      : "/api/data/pembelajaran/pembagianTugas";
+    const method = isEdit ? "PUT" : "POST";
+
+    const res = await fetch(url, {
+      method,
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
 
     if (!res.ok) {
-      throw new Error("Gagal menyimpan tugas");
+      throw new Error(`Gagal ${isEdit ? "memperbarui" : "menyimpan"} tugas`);
     }
 
     setTugasForm(EMPTY_TUGAS);
+    setEditingTugasId(null);
     setOpenTugas(false);
     await fetchRows();
+  };
+
+  const deleteTugas = async (id: string) => {
+    if (!confirm("Apakah Anda yakin ingin menghapus pembagian tugas mengajar ini?")) return;
+    try {
+      const res = await fetch(`/api/data/pembelajaran/pembagianTugas?id=${id}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) {
+        alert("Gagal menghapus data tugas.");
+        return;
+      }
+      await fetchRows();
+    } catch (error) {
+      console.error(error);
+      alert("Terjadi kesalahan saat menghapus data.");
+    }
   };
 
   return (
@@ -167,9 +231,9 @@ export default function TabKurikulum() {
             <CardDescription>Target penyampaian materi dan persentase daya serap siswa per Mata Pelajaran.</CardDescription>
           </div>
           <Dialog open={openPencapaian} onOpenChange={setOpenPencapaian}>
-            <DialogTrigger render={<Button className="bg-indigo-600 hover:bg-indigo-700 text-white"><Plus className="h-4 w-4 mr-2" />Input Pencapaian</Button>} />
+            <DialogTrigger render={<Button className="bg-indigo-600 hover:bg-indigo-700 text-white" onClick={() => { setPencapaianForm(EMPTY_PENCAPAIAN); setEditingPencapaianId(null); }}><Plus className="h-4 w-4 mr-2" />Input Pencapaian</Button>} />
             <DialogContent>
-              <DialogHeader><DialogTitle>Input Pencapaian Kurikulum</DialogTitle><DialogDescription>Tambah target dan daya serap mapel.</DialogDescription></DialogHeader>
+              <DialogHeader><DialogTitle>{editingPencapaianId ? "Edit Pencapaian Kurikulum" : "Input Pencapaian Kurikulum"}</DialogTitle><DialogDescription>Tambah target dan daya serap mapel.</DialogDescription></DialogHeader>
               <div className="grid gap-3">
                 <div className="grid gap-2"><Label htmlFor="mapel">Mata Pelajaran</Label><Input id="mapel" value={pencapaianForm.mapel} onChange={(e) => setPencapaianForm((prev) => ({ ...prev, mapel: e.target.value }))} /></div>
                 <div className="grid grid-cols-2 gap-3">
@@ -196,6 +260,29 @@ export default function TabKurikulum() {
                 >
                   <div className="flex justify-between items-center mb-3">
                     <span className="font-medium text-slate-800 dark:text-slate-200">{item.mapel}</span>
+                    <div className="flex gap-1">
+                      <button
+                        onClick={() => {
+                          setPencapaianForm({
+                            mapel: item.mapel || "",
+                            target: item.target?.toString() || "",
+                            dayaSerap: item.dayaSerap?.toString() || "",
+                            color: item.color || "bg-blue-500",
+                          });
+                          setEditingPencapaianId(item.id);
+                          setOpenPencapaian(true);
+                        }}
+                        className="p-1 text-slate-500 hover:text-slate-950 transition-colors"
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => deletePencapaian(item.id)}
+                        className="p-1 text-slate-500 hover:text-red-600 transition-colors"
+                      >
+                        <Trash className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
 
                   <div className="space-y-3">
@@ -229,13 +316,37 @@ export default function TabKurikulum() {
             <CardDescription>Distribusi beban mengajar guru di {namaSekolah || "(Belum input Nama Sekolah)"}.</CardDescription>
           </div>
           <Dialog open={openTugas} onOpenChange={setOpenTugas}>
-            <DialogTrigger render={<Button className="bg-indigo-600 hover:bg-indigo-700 text-white"><Plus className="h-4 w-4 mr-2" />Input Tugas</Button>} />
+            <DialogTrigger render={<Button className="bg-indigo-600 hover:bg-indigo-700 text-white" onClick={() => { setTugasForm(EMPTY_TUGAS); setEditingTugasId(null); }}><Plus className="h-4 w-4 mr-2" />Input Tugas</Button>} />
             <DialogContent>
-              <DialogHeader><DialogTitle>Input Pembagian Tugas</DialogTitle><DialogDescription>Tambah distribusi tugas mengajar guru.</DialogDescription></DialogHeader>
+              <DialogHeader><DialogTitle>{editingTugasId ? "Edit Pembagian Tugas" : "Input Pembagian Tugas"}</DialogTitle><DialogDescription>Tambah distribusi tugas mengajar guru.</DialogDescription></DialogHeader>
               <div className="grid gap-3">
-                <div className="grid gap-2"><Label htmlFor="nama">Nama Guru</Label><Input id="nama" value={tugasForm.nama} onChange={(e) => setTugasForm((prev) => ({ ...prev, nama: e.target.value }))} /></div>
+                <div className="grid gap-2">
+                  <Label htmlFor="tugas-guru-select">Pilih Guru</Label>
+                  <select
+                    id="tugas-guru-select"
+                    className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 disabled:cursor-not-allowed disabled:opacity-50"
+                    value={tugasForm.nama}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      const matched = pegawaiList.find((p) => p.nama === val);
+                      setTugasForm((prev) => ({
+                        ...prev,
+                        nama: val,
+                        golongan: matched ? (matched.status || "") : prev.golongan,
+                        jabatan: matched ? (matched.jabatan || "") : prev.jabatan,
+                      }));
+                    }}
+                  >
+                    <option value="">-- Pilih Guru --</option>
+                    {pegawaiList.map((p) => (
+                      <option key={p.id} value={p.nama}>
+                        {p.nama} {p.nip && p.nip !== "-" ? `(NIP. ${p.nip})` : ""}
+                      </option>
+                    ))}
+                  </select>
+                </div>
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="grid gap-2"><Label htmlFor="gol">Golongan</Label><Input id="gol" value={tugasForm.golongan} onChange={(e) => setTugasForm((prev) => ({ ...prev, golongan: e.target.value }))} /></div>
+                  <div className="grid gap-2"><Label htmlFor="gol">Status Pegawai</Label><Input id="gol" value={tugasForm.golongan} onChange={(e) => setTugasForm((prev) => ({ ...prev, golongan: e.target.value }))} /></div>
                   <div className="grid gap-2"><Label htmlFor="jab">Jabatan</Label><Input id="jab" value={tugasForm.jabatan} onChange={(e) => setTugasForm((prev) => ({ ...prev, jabatan: e.target.value }))} /></div>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
@@ -253,15 +364,16 @@ export default function TabKurikulum() {
               <TableHeader>
                 <TableRow className="bg-slate-50/50 dark:bg-slate-900/50 hover:bg-slate-50/50">
                   <TableHead className="font-medium text-slate-500">Nama Guru</TableHead>
-                  <TableHead className="font-medium text-slate-500">Golongan</TableHead>
+                  <TableHead className="font-medium text-slate-500">Status Pegawai</TableHead>
                   <TableHead className="font-medium text-slate-500">Jabatan</TableHead>
                   <TableHead className="font-medium text-slate-500 text-center">Kelas</TableHead>
                   <TableHead className="font-medium text-slate-500 text-center">Jml Jam</TableHead>
+                  <TableHead className="font-medium text-slate-500 text-right w-20">Aksi</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {tugasRows.length === 0 ? (
-                  <TableRow><TableCell colSpan={5} className="h-24 text-center text-slate-500">Belum ada data pembagian tugas.</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={6} className="h-24 text-center text-slate-500">Belum ada data pembagian tugas.</TableCell></TableRow>
                 ) : (
                   tugasRows.map((row) => (
                     <TableRow key={row.id} className="border-b border-slate-50 dark:border-slate-800 hover:bg-slate-50/80 transition-colors">
@@ -270,6 +382,32 @@ export default function TabKurikulum() {
                       <TableCell className="py-4 text-slate-600 dark:text-slate-300">{row.jabatan}</TableCell>
                       <TableCell className="py-4 text-center text-slate-600 dark:text-slate-300 font-medium">{row.kelas}</TableCell>
                       <TableCell className="py-4 text-center"><span className="inline-flex items-center justify-center min-w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium text-sm">{row.jam}</span></TableCell>
+                      <TableCell className="py-4 text-right">
+                        <div className="flex justify-end gap-1">
+                          <button
+                            onClick={() => {
+                              setTugasForm({
+                                nama: row.nama || "",
+                                golongan: row.golongan || "",
+                                jabatan: row.jabatan || "",
+                                kelas: row.kelas || "",
+                                jam: row.jam?.toString() || "",
+                              });
+                              setEditingTugasId(row.id);
+                              setOpenTugas(true);
+                            }}
+                            className="p-1 text-slate-500 hover:text-slate-950 transition-colors"
+                          >
+                            <Pencil className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => deleteTugas(row.id)}
+                            className="p-1 text-slate-500 hover:text-red-600 transition-colors"
+                          >
+                            <Trash className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </TableCell>
                     </TableRow>
                   ))
                 )}

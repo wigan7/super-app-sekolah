@@ -4765,12 +4765,80 @@
     ]
   },
   "pembelajaran": {
-    "supervisi": [],
-    "administrasi": [],
-    "kasus": [],
-    "bimbingan": [],
-    "kurikulumPencapaian": [],
-    "pembagianTugas": [],
+    "supervisi": [
+      {
+        "id": "1780295159646",
+        "tanggal": "2026-06-01",
+        "guru": "Wigan Anggit Utomo",
+        "kelas": "7",
+        "mapel": "a",
+        "aspek": "a",
+        "hasil": "a",
+        "saran": "a",
+        "status": "tidak lanjut"
+      }
+    ],
+    "administrasi": [
+      {
+        "id": "1780295210948",
+        "guru": "Dyah Rokhayati - NIP. 198406102014062003",
+        "mapel": "C",
+        "kelengkapan": {
+          "silabus": true,
+          "rpp": true,
+          "prota": true,
+          "promes": true
+        },
+        "hasil": "Lengkap & Sesuai"
+      }
+    ],
+    "kasus": [
+      {
+        "id": "1780295823152",
+        "nama": "ANINDITA FELISHA RAHMADANI",
+        "tanggal": "2026-06-01",
+        "uraian": "gelut onlen",
+        "penyelesaian": "jadi wasit",
+        "tindakLanjut": "damai"
+      }
+    ],
+    "bimbingan": [
+      {
+        "id": "1780295849846",
+        "waktu": "2026-06-03",
+        "nama": "ABID AQILA PRANAJA",
+        "masalah": "tidak masalah",
+        "bentuk": "tidak berbentuk",
+        "jenis": "none",
+        "tindakLanjut": "lanjut"
+      }
+    ],
+    "kurikulumPencapaian": [
+      {
+        "id": "1780295884519",
+        "mapel": "Matematika",
+        "target": 100,
+        "dayaSerap": 90,
+        "color": "bg-blue-500"
+      },
+      {
+        "id": "1780295896669",
+        "mapel": "IPAS",
+        "target": 100,
+        "dayaSerap": 25,
+        "color": "bg-blue-500"
+      }
+    ],
+    "pembagianTugas": [
+      {
+        "id": "1780296137916",
+        "nama": "Yeremia Budiana",
+        "golongan": "PPPK",
+        "jabatan": "Guru",
+        "kelas": "7",
+        "jam": 24
+      }
+    ],
     "tamu": [],
     "humas": [],
     "pengaduan": []

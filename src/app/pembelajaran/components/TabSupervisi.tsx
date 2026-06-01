@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Plus, CheckCircle2, AlertCircle } from "lucide-react";
+import { Plus, CheckCircle2, AlertCircle, Pencil, Trash } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -67,11 +67,14 @@ const EMPTY_ADMIN = {
 export default function TabSupervisi() {
   const [supervisiRows, setSupervisiRows] = useState<SupervisiRow[]>([]);
   const [administrasiRows, setAdministrasiRows] = useState<AdministrasiRow[]>([]);
+  const [pegawaiList, setPegawaiList] = useState<any[]>([]);
   const [openSupervisi, setOpenSupervisi] = useState(false);
   const [openAdmin, setOpenAdmin] = useState(false);
   const [supervisiForm, setSupervisiForm] = useState(EMPTY_SUPERVISI);
   const [adminForm, setAdminForm] = useState(EMPTY_ADMIN);
   const [namaSekolah, setNamaSekolah] = useState("");
+  const [editingSupervisiId, setEditingSupervisiId] = useState<string | null>(null);
+  const [editingAdminId, setEditingAdminId] = useState<string | null>(null);
 
   const fetchRows = async () => {
     try {
@@ -94,9 +97,38 @@ export default function TabSupervisi() {
     }
   };
 
+  const fetchPegawaiList = async () => {
+    try {
+      const res = await fetch("/api/data/kepegawaian/pegawai");
+      if (res.ok) {
+        const data = await res.json();
+        setPegawaiList(Array.isArray(data) ? data : []);
+      }
+    } catch (error) {
+      console.error("Gagal memuat list pegawai:", error);
+    }
+  };
+
+  const formatDate = (dateStr: string) => {
+    if (!dateStr) return "";
+    try {
+      const date = new Date(dateStr);
+      if (isNaN(date.getTime())) return dateStr;
+      return date.toLocaleDateString("id-ID", {
+        weekday: "short",
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      });
+    } catch {
+      return dateStr;
+    }
+  };
+
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchRows();
+    fetchPegawaiList();
 
     const fetchSchoolName = async () => {
       try {
@@ -113,19 +145,43 @@ export default function TabSupervisi() {
   }, []);
 
   const saveSupervisi = async () => {
-    const res = await fetch("/api/data/pembelajaran/supervisi", {
-      method: "POST",
+    const isEdit = !!editingSupervisiId;
+    const url = isEdit
+      ? `/api/data/pembelajaran/supervisi?id=${editingSupervisiId}`
+      : "/api/data/pembelajaran/supervisi";
+    const method = isEdit ? "PUT" : "POST";
+
+    const res = await fetch(url, {
+      method,
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(supervisiForm),
     });
 
     if (!res.ok) {
-      throw new Error("Gagal menyimpan supervisi");
+      throw new Error(`Gagal ${isEdit ? "memperbarui" : "menyimpan"} supervisi`);
     }
 
     setSupervisiForm(EMPTY_SUPERVISI);
+    setEditingSupervisiId(null);
     setOpenSupervisi(false);
     await fetchRows();
+  };
+
+  const deleteSupervisi = async (id: string) => {
+    if (!confirm("Apakah Anda yakin ingin menghapus data supervisi ini?")) return;
+    try {
+      const res = await fetch(`/api/data/pembelajaran/supervisi?id=${id}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) {
+        alert("Gagal menghapus data supervisi.");
+        return;
+      }
+      await fetchRows();
+    } catch (error) {
+      console.error(error);
+      alert("Terjadi kesalahan saat menghapus data.");
+    }
   };
 
   const saveAdministrasi = async () => {
@@ -141,19 +197,43 @@ export default function TabSupervisi() {
       hasil: adminForm.hasil,
     };
 
-    const res = await fetch("/api/data/pembelajaran/administrasi", {
-      method: "POST",
+    const isEdit = !!editingAdminId;
+    const url = isEdit
+      ? `/api/data/pembelajaran/administrasi?id=${editingAdminId}`
+      : "/api/data/pembelajaran/administrasi";
+    const method = isEdit ? "PUT" : "POST";
+
+    const res = await fetch(url, {
+      method,
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
 
     if (!res.ok) {
-      throw new Error("Gagal menyimpan administrasi");
+      throw new Error(`Gagal ${isEdit ? "memperbarui" : "menyimpan"} administrasi`);
     }
 
     setAdminForm(EMPTY_ADMIN);
+    setEditingAdminId(null);
     setOpenAdmin(false);
     await fetchRows();
+  };
+
+  const deleteAdministrasi = async (id: string) => {
+    if (!confirm("Apakah Anda yakin ingin menghapus data administrasi ini?")) return;
+    try {
+      const res = await fetch(`/api/data/pembelajaran/administrasi?id=${id}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) {
+        alert("Gagal menghapus data administrasi.");
+        return;
+      }
+      await fetchRows();
+    } catch (error) {
+      console.error(error);
+      alert("Terjadi kesalahan saat menghapus data.");
+    }
   };
 
   return (
@@ -165,37 +245,86 @@ export default function TabSupervisi() {
     >
       <div className="flex justify-end gap-2">
         <Dialog open={openSupervisi} onOpenChange={setOpenSupervisi}>
-          <DialogTrigger render={<Button className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm"><Plus className="mr-2 h-4 w-4" /> Input Supervisi</Button>} />
+          <DialogTrigger render={<Button className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm" onClick={() => { setSupervisiForm(EMPTY_SUPERVISI); setEditingSupervisiId(null); }}><Plus className="mr-2 h-4 w-4" /> Input Supervisi</Button>} />
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Input Supervisi Baru</DialogTitle>
+              <DialogTitle>{editingSupervisiId ? "Edit Supervisi" : "Input Supervisi Baru"}</DialogTitle>
               <DialogDescription>Catat hasil supervisi kelas.</DialogDescription>
             </DialogHeader>
             <div className="grid gap-3">
-              <div className="grid gap-2"><Label htmlFor="stanggal">Hari/Tanggal</Label><Input id="stanggal" value={supervisiForm.tanggal} onChange={(e) => setSupervisiForm((prev) => ({ ...prev, tanggal: e.target.value }))} /></div>
-              <div className="grid gap-2"><Label htmlFor="sguru">Nama Guru</Label><Input id="sguru" value={supervisiForm.guru} onChange={(e) => setSupervisiForm((prev) => ({ ...prev, guru: e.target.value }))} /></div>
+              <div className="grid gap-2">
+                <Label htmlFor="stanggal">Hari/Tanggal</Label>
+                <Input id="stanggal" type="date" value={supervisiForm.tanggal} onChange={(e) => setSupervisiForm((prev) => ({ ...prev, tanggal: e.target.value }))} />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="sguru-select">Pilih Guru</Label>
+                <select
+                  id="sguru-select"
+                  className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 disabled:cursor-not-allowed disabled:opacity-50"
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setSupervisiForm((prev) => ({ ...prev, guru: val }));
+                  }}
+                  value={supervisiForm.guru}
+                >
+                  <option value="">-- Pilih Guru --</option>
+                  {pegawaiList.map((p) => {
+                    const label = p.nip && p.nip !== "-" ? `${p.nama} - NIP. ${p.nip}` : p.nama;
+                    return (
+                      <option key={p.id} value={label}>
+                        {label} ({p.jabatan || ""})
+                      </option>
+                    );
+                  })}
+                </select>
+                <div className="text-[10px] text-slate-400">Atau ketik nama kustom secara manual di bawah:</div>
+                <Input id="sguru" placeholder="Nama / NIP guru" value={supervisiForm.guru} onChange={(e) => setSupervisiForm((prev) => ({ ...prev, guru: e.target.value }))} />
+              </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="grid gap-2"><Label htmlFor="skelas">Kelas</Label><Input id="skelas" value={supervisiForm.kelas} onChange={(e) => setSupervisiForm((prev) => ({ ...prev, kelas: e.target.value }))} /></div>
                 <div className="grid gap-2"><Label htmlFor="smapel">Mapel</Label><Input id="smapel" value={supervisiForm.mapel} onChange={(e) => setSupervisiForm((prev) => ({ ...prev, mapel: e.target.value }))} /></div>
               </div>
               <div className="grid gap-2"><Label htmlFor="saspek">Aspek Supervisi</Label><Input id="saspek" value={supervisiForm.aspek} onChange={(e) => setSupervisiForm((prev) => ({ ...prev, aspek: e.target.value }))} /></div>
               <div className="grid gap-2"><Label htmlFor="shasil">Hasil</Label><Input id="shasil" value={supervisiForm.hasil} onChange={(e) => setSupervisiForm((prev) => ({ ...prev, hasil: e.target.value }))} /></div>
-              <div className="grid gap-2"><Label htmlFor="ssaran">Saran</Label><Input id="ssaran" value={supervisiForm.saran} onChange={(e) => setSupervisiForm((prev) => ({ ...prev, saran: e.target.value }))} /></div>
-              <div className="grid gap-2"><Label htmlFor="sstatus">Status</Label><Input id="sstatus" value={supervisiForm.status} onChange={(e) => setSupervisiForm((prev) => ({ ...prev, status: e.target.value }))} /></div>
+              <div className="grid gap-2"><Label htmlFor="ssaran">Refleksi</Label><Input id="ssaran" placeholder="Refleksi tindak lanjut" value={supervisiForm.saran} onChange={(e) => setSupervisiForm((prev) => ({ ...prev, saran: e.target.value }))} /></div>
+              <div className="grid gap-2"><Label htmlFor="sstatus">Tindak Lanjut</Label><Input id="sstatus" placeholder="Status tindak lanjut" value={supervisiForm.status} onChange={(e) => setSupervisiForm((prev) => ({ ...prev, status: e.target.value }))} /></div>
             </div>
             <DialogFooter><Button variant="outline" onClick={() => setOpenSupervisi(false)}>Batal</Button><Button onClick={saveSupervisi}>Simpan</Button></DialogFooter>
           </DialogContent>
         </Dialog>
 
         <Dialog open={openAdmin} onOpenChange={setOpenAdmin}>
-          <DialogTrigger render={<Button variant="outline"><Plus className="mr-2 h-4 w-4" /> Input Administrasi</Button>} />
+          <DialogTrigger render={<Button variant="outline" onClick={() => { setAdminForm(EMPTY_ADMIN); setEditingAdminId(null); }}><Plus className="mr-2 h-4 w-4" /> Input Administrasi</Button>} />
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Input Administrasi Guru</DialogTitle>
+              <DialogTitle>{editingAdminId ? "Edit Administrasi" : "Input Administrasi Guru"}</DialogTitle>
               <DialogDescription>Catat pemeriksaan kelengkapan perangkat pembelajaran.</DialogDescription>
             </DialogHeader>
             <div className="grid gap-3">
-              <div className="grid gap-2"><Label htmlFor="aguru">Nama Guru</Label><Input id="aguru" value={adminForm.guru} onChange={(e) => setAdminForm((prev) => ({ ...prev, guru: e.target.value }))} /></div>
+              <div className="grid gap-2">
+                <Label htmlFor="aguru-select">Pilih Guru</Label>
+                <select
+                  id="aguru-select"
+                  className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 disabled:cursor-not-allowed disabled:opacity-50"
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setAdminForm((prev) => ({ ...prev, guru: val }));
+                  }}
+                  value={adminForm.guru}
+                >
+                  <option value="">-- Pilih Guru --</option>
+                  {pegawaiList.map((p) => {
+                    const label = p.nip && p.nip !== "-" ? `${p.nama} - NIP. ${p.nip}` : p.nama;
+                    return (
+                      <option key={p.id} value={label}>
+                        {label} ({p.jabatan || ""})
+                      </option>
+                    );
+                  })}
+                </select>
+                <div className="text-[10px] text-slate-400">Atau ketik nama kustom secara manual di bawah:</div>
+                <Input id="aguru" placeholder="Nama / NIP guru" value={adminForm.guru} onChange={(e) => setAdminForm((prev) => ({ ...prev, guru: e.target.value }))} />
+              </div>
               <div className="grid gap-2"><Label htmlFor="amapel">Mapel</Label><Input id="amapel" value={adminForm.mapel} onChange={(e) => setAdminForm((prev) => ({ ...prev, mapel: e.target.value }))} /></div>
               <div className="grid grid-cols-2 gap-3">
                 <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={adminForm.silabus} onChange={(e) => setAdminForm((prev) => ({ ...prev, silabus: e.target.checked }))} />Silabus</label>
@@ -225,23 +354,53 @@ export default function TabSupervisi() {
                   <TableHead className="font-medium text-slate-500">Kelas</TableHead>
                   <TableHead className="font-medium text-slate-500">Mapel</TableHead>
                   <TableHead className="font-medium text-slate-500">Aspek Disupervisi</TableHead>
-                  <TableHead className="font-medium text-slate-500">Hasil & Saran</TableHead>
-                  <TableHead className="font-medium text-slate-500 text-right">Status</TableHead>
+                  <TableHead className="font-medium text-slate-500">Hasil & Refleksi</TableHead>
+                  <TableHead className="font-medium text-slate-500 text-right">Tindak Lanjut</TableHead>
+                  <TableHead className="font-medium text-slate-500 text-right w-20">Aksi</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {supervisiRows.length === 0 ? (
-                  <TableRow><TableCell colSpan={7} className="h-24 text-center text-slate-500">Belum ada data supervisi.</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={8} className="h-24 text-center text-slate-500">Belum ada data supervisi.</TableCell></TableRow>
                 ) : (
                   supervisiRows.map((row) => (
                     <TableRow key={row.id} className="border-b border-slate-50 dark:border-slate-800 hover:bg-slate-50/80 transition-colors">
-                      <TableCell className="py-4 text-slate-600 dark:text-slate-300">{row.tanggal}</TableCell>
+                      <TableCell className="py-4 text-slate-600 dark:text-slate-300">{formatDate(row.tanggal)}</TableCell>
                       <TableCell className="py-4 font-medium text-slate-900 dark:text-slate-100">{row.guru}</TableCell>
                       <TableCell className="py-4 text-slate-600 dark:text-slate-300">{row.kelas}</TableCell>
                       <TableCell className="py-4 text-slate-600 dark:text-slate-300">{row.mapel}</TableCell>
                       <TableCell className="py-4 text-slate-600 dark:text-slate-300">{row.aspek}</TableCell>
                       <TableCell className="py-4"><div className="text-sm font-medium text-slate-900 dark:text-slate-100">{row.hasil}</div><div className="text-xs text-slate-500 mt-0.5">{row.saran}</div></TableCell>
                       <TableCell className="py-4 text-right"><span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${row.status === "Selesai" ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" : "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"}`}>{row.status}</span></TableCell>
+                      <TableCell className="py-4 text-right">
+                        <div className="flex justify-end gap-1">
+                          <button
+                            onClick={() => {
+                              setSupervisiForm({
+                                tanggal: row.tanggal || "",
+                                guru: row.guru || "",
+                                kelas: row.kelas || "",
+                                mapel: row.mapel || "",
+                                aspek: row.aspek || "",
+                                hasil: row.hasil || "",
+                                saran: row.saran || "",
+                                status: row.status || "Tindak Lanjut",
+                              });
+                              setEditingSupervisiId(row.id);
+                              setOpenSupervisi(true);
+                            }}
+                            className="p-1 text-slate-500 hover:text-slate-950 transition-colors"
+                          >
+                            <Pencil className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => deleteSupervisi(row.id)}
+                            className="p-1 text-slate-500 hover:text-red-600 transition-colors"
+                          >
+                            <Trash className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </TableCell>
                     </TableRow>
                   ))
                 )}
@@ -268,11 +427,12 @@ export default function TabSupervisi() {
                   <TableHead className="font-medium text-slate-500 text-center">Prota</TableHead>
                   <TableHead className="font-medium text-slate-500 text-center">Promes</TableHead>
                   <TableHead className="font-medium text-slate-500 text-right">Hasil Pemeriksaan</TableHead>
+                  <TableHead className="font-medium text-slate-500 text-right w-20">Aksi</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {administrasiRows.length === 0 ? (
-                  <TableRow><TableCell colSpan={7} className="h-24 text-center text-slate-500">Belum ada data administrasi.</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={8} className="h-24 text-center text-slate-500">Belum ada data administrasi.</TableCell></TableRow>
                 ) : (
                   administrasiRows.map((row) => (
                     <TableRow key={row.id} className="border-b border-slate-50 dark:border-slate-800 hover:bg-slate-50/80 transition-colors">
@@ -283,6 +443,34 @@ export default function TabSupervisi() {
                       <TableCell className="py-4 text-center">{row.kelengkapan.prota ? <CheckCircle2 className="h-5 w-5 text-emerald-500 mx-auto" /> : <AlertCircle className="h-5 w-5 text-rose-500 mx-auto" />}</TableCell>
                       <TableCell className="py-4 text-center">{row.kelengkapan.promes ? <CheckCircle2 className="h-5 w-5 text-emerald-500 mx-auto" /> : <AlertCircle className="h-5 w-5 text-rose-500 mx-auto" />}</TableCell>
                       <TableCell className="py-4 text-right"><span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${row.hasil === "Lengkap & Sesuai" ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" : "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400"}`}>{row.hasil}</span></TableCell>
+                      <TableCell className="py-4 text-right">
+                        <div className="flex justify-end gap-1">
+                          <button
+                            onClick={() => {
+                              setAdminForm({
+                                guru: row.guru || "",
+                                mapel: row.mapel || "",
+                                silabus: !!row.kelengkapan?.silabus,
+                                rpp: !!row.kelengkapan?.rpp,
+                                prota: !!row.kelengkapan?.prota,
+                                promes: !!row.kelengkapan?.promes,
+                                hasil: row.hasil || "Lengkap & Sesuai",
+                              });
+                              setEditingAdminId(row.id);
+                              setOpenAdmin(true);
+                            }}
+                            className="p-1 text-slate-500 hover:text-slate-950 transition-colors"
+                          >
+                            <Pencil className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => deleteAdministrasi(row.id)}
+                            className="p-1 text-slate-500 hover:text-red-600 transition-colors"
+                          >
+                            <Trash className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </TableCell>
                     </TableRow>
                   ))
                 )}
