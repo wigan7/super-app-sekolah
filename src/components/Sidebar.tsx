@@ -198,7 +198,7 @@ export function Sidebar() {
               <img 
                 src="/logo.png?v=2" 
                 alt="Pak Candra Super App Logo" 
-                className="object-contain w-full h-auto max-w-[160px] drop-shadow-sm" 
+                className="object-contain w-full h-auto max-w-40 drop-shadow-sm" 
               />
             </div>
             <button 

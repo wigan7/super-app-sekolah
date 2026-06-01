@@ -124,10 +124,10 @@
 
   /* iOS Vibrancy/Frosted Glass */
   .ios-glass {
-    @apply bg-white/70 backdrop-blur-[20px] backdrop-saturate-[180%];
+    @apply bg-white/70 backdrop-blur-[20px] backdrop-saturate-180;
   }
   
   .dark .ios-glass {
-    @apply bg-black/60 backdrop-blur-[20px] backdrop-saturate-[180%];
+    @apply bg-black/60 backdrop-blur-[20px] backdrop-saturate-180;
   }
 }

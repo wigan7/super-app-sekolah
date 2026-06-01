@@ -36,9 +36,9 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-linear-to-tr from-slate-50 via-indigo-50 to-purple-50 relative overflow-hidden">
       {/* Background Ornaments */}
-      <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-indigo-300/30 blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[600px] h-[600px] rounded-full bg-purple-300/30 blur-[150px] pointer-events-none" />
-      <div className="absolute top-[40%] right-[10%] w-[300px] h-[300px] rounded-full bg-pink-300/20 blur-[100px] pointer-events-none" />
+      <div className="absolute top-[-10%] left-[-10%] w-125 h-125 rounded-full bg-indigo-300/30 blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-150 h-150 rounded-full bg-purple-300/30 blur-[150px] pointer-events-none" />
+      <div className="absolute top-[40%] right-[10%] w-75 h-75 rounded-full bg-pink-300/20 blur-[100px] pointer-events-none" />
 
       <motion.div
         initial={{ opacity: 0, y: 20, scale: 0.95 }}
@@ -51,15 +51,26 @@ export default function LoginPage() {
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ delay: 0.2, type: "spring", bounce: 0.5 }}
-            className="w-20 h-20 bg-linear-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-500/30 mb-6"
+            className="w-full max-w-55 bg-white/70 rounded-2xl border border-slate-200/70 shadow-lg shadow-slate-900/5 p-3 mb-5"
           >
-            <Lock className="w-10 h-10 text-white" />
+            <Image
+              src="/logo.png"
+              alt="Logo Pak Candra Super App"
+              width={880}
+              height={320}
+              className="w-full h-auto object-contain"
+              priority
+            />
           </motion.div>
+          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-indigo-100 bg-indigo-50 px-3 py-1 text-[11px] font-semibold tracking-wide text-indigo-700 uppercase">
+            <Lock className="w-3.5 h-3.5" />
+            Portal Resmi Kepala Sekolah
+          </div>
           <h1 className="text-3xl font-extrabold text-transparent bg-clip-text bg-linear-to-r from-indigo-900 to-purple-900 mb-2 text-center">
-            Super App Sekolah
+            Pak Candra Super App
           </h1>
           <p className="text-slate-500 font-medium text-center text-sm">
-            Silakan login untuk mengakses dashboard manajemen sekolah.
+            Silakan login untuk mengakses dashboard manajemen sekolah terpadu.
           </p>
         </div>
 
@@ -132,6 +143,9 @@ export default function LoginPage() {
           <p className="text-xs text-slate-400 font-medium flex items-center justify-center gap-2">
             <Shield className="w-4 h-4" />
             Sistem Informasi Terenkripsi & Aman
+          </p>
+          <p className="mt-2 text-[11px] text-slate-400 font-semibold tracking-wide uppercase">
+            Pak Candra Super App
           </p>
         </div>
       </motion.div>
