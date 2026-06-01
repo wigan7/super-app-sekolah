@@ -11,6 +11,10 @@ type SchoolData = {
   kesiswaan: {
     induk: RowRecord[];
     akademikPrestasi: RowRecord[];
+    akademikKenaikan: RowRecord[];
+    rekapUjian: RowRecord[];
+    penyerahanRaport: RowRecord[];
+    penyerahanIjazah: RowRecord[];
     kehadiranHarian: RowRecord[];
     kehadiranBulanan: RowRecord[];
     mutasiMasuk: RowRecord[];
@@ -62,6 +66,10 @@ const DEFAULT_SCHOOL_DATA: SchoolData = {
   kesiswaan: {
     induk: [],
     akademikPrestasi: [],
+    akademikKenaikan: [],
+    rekapUjian: [],
+    penyerahanRaport: [],
+    penyerahanIjazah: [],
     kehadiranHarian: [],
     kehadiranBulanan: [],
     mutasiMasuk: [],
@@ -189,6 +197,54 @@ export const appendDatasetRow = async (
   await writeSchoolData(schoolData);
   return newRow;
 };
+
+export const deleteDatasetRow = async (
+  section: keyof SchoolData,
+  dataset: string,
+  id: string
+) => {
+  const schoolData = await getSchoolData();
+  const sectionData = schoolData[section] as Record<string, any[]>;
+  if (!Array.isArray(sectionData?.[dataset])) {
+    return false;
+  }
+  const originalLength = sectionData[dataset].length;
+  sectionData[dataset] = sectionData[dataset].filter((row) => row.id !== id);
+  if (sectionData[dataset].length === originalLength) {
+    return false;
+  }
+  await writeSchoolData(schoolData);
+  return true;
+};
+
+export const importDatasetRows = async (
+  section: keyof SchoolData,
+  dataset: string,
+  rows: Record<string, JsonValue>[],
+  mode: 'append' | 'overwrite' = 'append'
+) => {
+  const schoolData = await getSchoolData();
+  const sectionData = schoolData[section] as Record<string, any[]>;
+  if (!Array.isArray(sectionData?.[dataset])) {
+    return null;
+  }
+
+  const newRows = rows.map((row) => ({
+    id: row.id ?? `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+    ...row,
+  }));
+
+  if (mode === 'overwrite') {
+    sectionData[dataset] = newRows;
+  } else {
+    sectionData[dataset] = [...sectionData[dataset], ...newRows];
+  }
+
+  await writeSchoolData(schoolData);
+  return newRows;
+};
+
+
 
 export const getPkksState = async () => {
   const schoolData = await getSchoolData();

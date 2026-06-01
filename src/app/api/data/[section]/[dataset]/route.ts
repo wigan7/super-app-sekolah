@@ -1,10 +1,14 @@
 import { NextResponse } from 'next/server';
-import { appendDatasetRow, getDatasetRows } from '@/lib/localDb';
+import { appendDatasetRow, getDatasetRows, deleteDatasetRow, importDatasetRows } from '@/lib/localDb';
 
 const ALLOWED_DATASETS = {
   kesiswaan: new Set([
     'induk',
     'akademikPrestasi',
+    'akademikKenaikan',
+    'rekapUjian',
+    'penyerahanRaport',
+    'penyerahanIjazah',
     'kehadiranHarian',
     'kehadiranBulanan',
     'mutasiMasuk',
@@ -72,15 +76,55 @@ export async function POST(
     }
 
     const body = await request.json();
-    const newRow = await appendDatasetRow(section, dataset, body ?? {});
+    const { searchParams } = new URL(request.url);
+    const mode = searchParams.get('mode') || 'append';
 
-    if (!newRow) {
-      return NextResponse.json({ error: 'Dataset tidak valid' }, { status: 400 });
+    if (Array.isArray(body)) {
+      const imported = await importDatasetRows(section as any, dataset, body, mode as any);
+      if (!imported) {
+        return NextResponse.json({ error: 'Dataset tidak valid' }, { status: 400 });
+      }
+      return NextResponse.json({ count: imported.length, rows: imported }, { status: 201 });
+    } else {
+      const newRow = await appendDatasetRow(section, dataset, body ?? {});
+      if (!newRow) {
+        return NextResponse.json({ error: 'Dataset tidak valid' }, { status: 400 });
+      }
+      return NextResponse.json(newRow, { status: 201 });
     }
-
-    return NextResponse.json(newRow, { status: 201 });
   } catch (error) {
     console.error('Error adding dataset row:', error);
     return NextResponse.json({ error: 'Gagal menambahkan data' }, { status: 500 });
   }
 }
+
+export async function DELETE(
+  request: Request,
+  context: { params: Promise<{ section: string; dataset: string }> }
+) {
+  try {
+    const { section, dataset } = await context.params;
+
+    if (!isAllowedDataset(section, dataset)) {
+      return NextResponse.json({ error: 'Dataset tidak ditemukan' }, { status: 404 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
+
+    if (!id) {
+      return NextResponse.json({ error: 'ID required' }, { status: 400 });
+    }
+
+    const success = await deleteDatasetRow(section as any, dataset, id);
+    if (!success) {
+      return NextResponse.json({ error: 'Gagal menghapus data' }, { status: 404 });
+    }
+
+    return NextResponse.json({ message: 'Data berhasil dihapus' });
+  } catch (error) {
+    console.error('Error deleting dataset row:', error);
+    return NextResponse.json({ error: 'Gagal menghapus data' }, { status: 500 });
+  }
+}
+
