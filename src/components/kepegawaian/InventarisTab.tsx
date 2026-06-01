@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Search, Plus } from "lucide-react";
+import { Search, Plus, Pencil, Trash } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
   Table,
@@ -49,6 +49,7 @@ export function InventarisTab() {
   const [rows, setRows] = useState<InventarisRow[]>([]);
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   const fetchRows = async () => {
     try {
@@ -74,25 +75,140 @@ export function InventarisTab() {
   );
 
   const saveInventaris = async () => {
+    const isEdit = !!editingId;
     const payload = {
       ...form,
       jumlah: Number(form.jumlah || 0),
     };
 
-    const res = await fetch("/api/data/kepegawaian/inventaris", {
-      method: "POST",
+    const url = isEdit 
+      ? `/api/data/kepegawaian/inventaris?id=${editingId}` 
+      : "/api/data/kepegawaian/inventaris";
+    const method = isEdit ? "PUT" : "POST";
+
+    const res = await fetch(url, {
+      method,
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
 
     if (!res.ok) {
-      alert("Gagal menyimpan inventaris.");
+      alert(`Gagal ${isEdit ? "memperbarui" : "menyimpan"} inventaris.`);
       return;
     }
 
     setForm(EMPTY_FORM);
+    setEditingId(null);
     setOpen(false);
     await fetchRows();
+  };
+
+  const deleteInventaris = async (id: string) => {
+    if (!confirm("Apakah Anda yakin ingin menghapus barang inventaris ini?")) return;
+    try {
+      const res = await fetch(`/api/data/kepegawaian/inventaris?id=${id}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) {
+        alert("Gagal menghapus data inventaris.");
+        return;
+      }
+      await fetchRows();
+    } catch (error) {
+      console.error(error);
+      alert("Terjadi kesalahan saat menghapus data.");
+    }
+  };
+
+  // Helper template Excel
+  const downloadTemplate = async () => {
+    try {
+      const XLSX = await import("xlsx");
+      const headers = [["Nama Barang", "Jumlah", "Asal Usul / Perolehan", "Keterangan"]];
+      
+      const ws = XLSX.utils.aoa_to_sheet(headers);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Template");
+      XLSX.writeFile(wb, "Template_Inventaris.xlsx");
+    } catch (err) {
+      console.error("Gagal mendownload template:", err);
+      alert("Terjadi kesalahan saat mengunduh template.");
+    }
+  };
+
+  // Helper Export Excel
+  const exportData = async () => {
+    try {
+      const XLSX = await import("xlsx");
+      const rowsToExport = rows.map((item) => ({
+        "Nama Barang": item.nama,
+        "Jumlah": item.jumlah,
+        "Asal Usul / Perolehan": item.perolehan,
+        "Keterangan": item.keterangan
+      }));
+
+      const ws = XLSX.utils.json_to_sheet(rowsToExport);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Inventaris");
+      XLSX.writeFile(wb, "Data_Inventaris.xlsx");
+    } catch (err) {
+      console.error("Gagal export data:", err);
+      alert("Terjadi kesalahan saat melakukan export.");
+    }
+  };
+
+  // Helper Import Excel
+  const handleImport = async (file: File) => {
+    try {
+      const XLSX = await import("xlsx");
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        try {
+          const data = new Uint8Array(event.target?.result as ArrayBuffer);
+          const workbook = XLSX.read(data, { type: "array" });
+          const sheet = workbook.Sheets[workbook.SheetNames[0]];
+          const rawRows = XLSX.utils.sheet_to_json<any>(sheet);
+
+          if (rawRows.length === 0) {
+            alert("File kosong atau tidak memiliki baris data.");
+            return;
+          }
+
+          const mappedData = rawRows.map((row: any) => ({
+            nama: String(row["Nama Barang"] || row["nama barang"] || "").trim(),
+            jumlah: Number(row["Jumlah"] || row["jumlah"] || 0),
+            perolehan: String(row["Asal Usul / Perolehan"] || row["asal usul / perolehan"] || "").trim(),
+            keterangan: String(row["Keterangan"] || row["keterangan"] || "").trim(),
+          })).filter((item: any) => item.nama !== "");
+
+          if (mappedData.length === 0) {
+            alert("Tidak ada data valid yang dapat diimpor.");
+            return;
+          }
+
+          const res = await fetch("/api/data/kepegawaian/inventaris?mode=append", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(mappedData),
+          });
+
+          if (!res.ok) {
+            alert("Gagal mengimpor data ke server.");
+            return;
+          }
+
+          alert(`Berhasil mengimpor ${mappedData.length} data inventaris.`);
+          await fetchRows();
+        } catch (err) {
+          console.error(err);
+          alert("Gagal memproses file Excel.");
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    } catch (err) {
+      console.error(err);
+      alert("Gagal melakukan load library Excel.");
+    }
   };
 
   return (
@@ -107,29 +223,57 @@ export function InventarisTab() {
           </p>
         </div>
 
-        <div className="flex gap-2 w-full sm:w-auto">
-          <div className="relative max-w-sm w-full sm:w-64">
+        <div className="flex gap-2 w-full sm:w-auto items-center flex-wrap sm:flex-nowrap">
+          <div className="relative max-w-sm w-full sm:w-48">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <Search className="h-4 w-4 text-slate-400" />
             </div>
             <Input
               type="text"
               placeholder="Cari barang..."
-              className="pl-9 bg-white border-slate-200 focus:border-slate-300 focus:ring-slate-200 rounded-lg shadow-sm transition-all"
+              className="pl-9 bg-white border-slate-200 focus:border-slate-300 focus:ring-slate-200 rounded-lg shadow-sm transition-all text-sm"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
 
+          <div className="flex items-center gap-2">
+            <button
+              onClick={downloadTemplate}
+              className="text-xs text-slate-500 hover:text-slate-950 transition-colors font-medium cursor-pointer border border-slate-200 px-3 py-2 bg-white rounded-lg hover:bg-slate-50 shadow-sm"
+            >
+              Template
+            </button>
+            <label className="text-xs text-slate-500 hover:text-slate-950 transition-colors font-medium cursor-pointer border border-slate-200 px-3 py-2 bg-white rounded-lg hover:bg-slate-50 shadow-sm flex items-center">
+              <span>Import</span>
+              <input
+                type="file"
+                accept=".xlsx,.xls"
+                onChange={(e) => {
+                  const files = e.target.files;
+                  if (files && files[0]) handleImport(files[0]);
+                  e.target.value = "";
+                }}
+                className="hidden"
+              />
+            </label>
+            <button
+              onClick={exportData}
+              className="text-xs text-slate-500 hover:text-slate-950 transition-colors font-medium cursor-pointer border border-slate-200 px-3 py-2 bg-white rounded-lg hover:bg-slate-50 shadow-sm"
+            >
+              Export
+            </button>
+          </div>
+
           <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger render={<Button className="bg-slate-900 text-white hover:bg-slate-800" />}>
+            <DialogTrigger render={<Button className="bg-slate-900 text-white hover:bg-slate-800 rounded-lg shadow-sm" onClick={() => { setForm(EMPTY_FORM); setEditingId(null); }} />}>
               <Plus className="h-4 w-4 mr-2" />
               Tambah
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Input Inventaris</DialogTitle>
-                <DialogDescription>Tambahkan barang inventaris baru.</DialogDescription>
+                <DialogTitle>{editingId ? "Edit Inventaris" : "Input Inventaris"}</DialogTitle>
+                <DialogDescription>Tambahkan atau ubah barang inventaris.</DialogDescription>
               </DialogHeader>
               <div className="grid gap-3">
                 <div className="grid gap-2"><Label htmlFor="nama">Nama Barang</Label><Input id="nama" value={form.nama} onChange={(e) => setForm((prev) => ({ ...prev, nama: e.target.value }))} /></div>
@@ -154,6 +298,7 @@ export function InventarisTab() {
               <TableHead>Jumlah</TableHead>
               <TableHead>Asal Usul / Perolehan</TableHead>
               <TableHead>Keterangan</TableHead>
+              <TableHead className="w-20 text-right">Aksi</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -173,11 +318,36 @@ export function InventarisTab() {
                   <TableCell className="text-slate-600">{item.jumlah}</TableCell>
                   <TableCell className="text-slate-600">{item.perolehan}</TableCell>
                   <TableCell className="text-slate-600">{item.keterangan}</TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end gap-1">
+                      <button
+                        onClick={() => {
+                          setForm({
+                            nama: item.nama || "",
+                            jumlah: String(item.jumlah || ""),
+                            perolehan: item.perolehan || "",
+                            keterangan: item.keterangan || "",
+                          });
+                          setEditingId(item.id);
+                          setOpen(true);
+                        }}
+                        className="p-1 text-slate-500 hover:text-slate-950 transition-colors"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={() => deleteInventaris(item.id)}
+                        className="p-1 text-slate-500 hover:text-red-600 transition-colors"
+                      >
+                        <Trash className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </TableCell>
                 </motion.tr>
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={4} className="h-24 text-center text-slate-500">
+                <TableCell colSpan={5} className="h-24 text-center text-slate-500">
                   Tidak ada barang yang sesuai dengan pencarian.
                 </TableCell>
               </TableRow>

@@ -4666,12 +4666,103 @@
     "mutasiKeluar": []
   },
   "kepegawaian": {
-    "pegawai": [],
-    "izinKeluar": [],
+    "pegawai": [
+      {
+        "id": "1780293320157-rh7x1mz",
+        "nama": "Dyah Rokhayati",
+        "nip": "198406102014062003",
+        "jabatan": "Guru",
+        "status": "PNS"
+      },
+      {
+        "id": "1780293320157-jbfcwoz",
+        "nama": "Lilik Kurniasih",
+        "nip": "198012032022212013",
+        "jabatan": "Guru",
+        "status": "PPPK"
+      },
+      {
+        "id": "1780293320157-mld9i93",
+        "nama": "Munafi'atun",
+        "nip": "198707232025212044",
+        "jabatan": "Guru",
+        "status": "PPPK"
+      },
+      {
+        "id": "1780293320157-qi8dcfw",
+        "nama": "Putro Rasianto",
+        "nip": "198611132019021001",
+        "jabatan": "Guru",
+        "status": "PNS"
+      },
+      {
+        "id": "1780293320157-pqk5wvu",
+        "nama": "Yeremia Budiana",
+        "nip": "197602032025211014",
+        "jabatan": "Guru",
+        "status": "PPPK"
+      },
+      {
+        "id": "1780293320157-cbd85lb",
+        "nama": "Yoda Hari Kristiawan",
+        "nip": "199702102025211043",
+        "jabatan": "Guru",
+        "status": "PPPK"
+      },
+      {
+        "id": "1780293458414",
+        "nama": "Wigan Anggit Utomo",
+        "nip": "",
+        "jabatan": "Guru",
+        "status": "Wegah Kerjo",
+        "penilaian": []
+      }
+    ],
+    "izinKeluar": [
+      {
+        "id": "1780293638323",
+        "tanggal": "2026-06-10",
+        "nama": "Dyah Rokhayati - NIP. 198406102014062003",
+        "tujuan": "Rumah Bapa",
+        "keperluan": "Ibadah",
+        "berangkat": "",
+        "kembali": "",
+        "tipe": "Full"
+      },
+      {
+        "id": "1780293823644",
+        "tanggal": "2026-05-27",
+        "nama": "Lilik Kurniasih - NIP. 198012032022212013",
+        "tujuan": "BKPSDM Boyolali",
+        "keperluan": "Resign PNS",
+        "berangkat": "",
+        "kembali": "",
+        "tipe": "Beberapa Hari",
+        "tanggalKembali": "2026-06-06"
+      }
+    ],
     "piket": [],
-    "diklat": [],
+    "diklat": [
+      {
+        "id": "1780294273362-yhhldpt",
+        "nama": "Kachuks",
+        "diklat": "Ngacuk",
+        "penyelenggara": "BBPMP Neraka",
+        "tingkat": "Kecamatan",
+        "tahun": "2070",
+        "lama": "32"
+      }
+    ],
     "penghargaan": [],
-    "inventaris": []
+    "inventaris": [
+      {
+        "id": "1780294570750",
+        "nama": "a",
+        "jumlah": 1,
+        "perolehan": "maling",
+        "keterangan": "maling"
+      }
+    ]
   },
   "pembelajaran": {
     "supervisi": [],

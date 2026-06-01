@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { appendDatasetRow, getDatasetRows, deleteDatasetRow, importDatasetRows } from '@/lib/localDb';
+import { appendDatasetRow, getDatasetRows, deleteDatasetRow, importDatasetRows, updateDatasetRow } from '@/lib/localDb';
 
 const ALLOWED_DATASETS = {
   kesiswaan: new Set([
@@ -95,6 +95,36 @@ export async function POST(
   } catch (error) {
     console.error('Error adding dataset row:', error);
     return NextResponse.json({ error: 'Gagal menambahkan data' }, { status: 500 });
+  }
+}
+
+export async function PUT(
+  request: Request,
+  context: { params: Promise<{ section: string; dataset: string }> }
+) {
+  try {
+    const { section, dataset } = await context.params;
+
+    if (!isAllowedDataset(section, dataset)) {
+      return NextResponse.json({ error: 'Dataset tidak ditemukan' }, { status: 404 });
+    }
+
+    const body = await request.json();
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
+
+    if (!id) {
+      return NextResponse.json({ error: 'ID required' }, { status: 400 });
+    }
+
+    const updatedRow = await updateDatasetRow(section as any, dataset, id, body ?? {});
+    if (!updatedRow) {
+      return NextResponse.json({ error: 'Data tidak ditemukan' }, { status: 404 });
+    }
+    return NextResponse.json(updatedRow);
+  } catch (error) {
+    console.error('Error updating dataset row:', error);
+    return NextResponse.json({ error: 'Gagal memperbarui data' }, { status: 500 });
   }
 }
 

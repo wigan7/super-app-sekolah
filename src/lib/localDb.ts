@@ -217,6 +217,30 @@ export const deleteDatasetRow = async (
   return true;
 };
 
+export const updateDatasetRow = async (
+  section: keyof SchoolData,
+  dataset: string,
+  id: string,
+  row: Record<string, JsonValue>
+) => {
+  const schoolData = await getSchoolData();
+  const sectionData = schoolData[section] as Record<string, any[]>;
+  if (!Array.isArray(sectionData?.[dataset])) {
+    return null;
+  }
+  const idx = sectionData[dataset].findIndex((r) => r.id === id);
+  if (idx === -1) {
+    return null;
+  }
+  sectionData[dataset][idx] = {
+    ...sectionData[dataset][idx],
+    ...row,
+    id, // ensure ID doesn't change
+  };
+  await writeSchoolData(schoolData);
+  return sectionData[dataset][idx];
+};
+
 export const importDatasetRows = async (
   section: keyof SchoolData,
   dataset: string,
