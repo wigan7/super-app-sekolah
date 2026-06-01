@@ -9,7 +9,33 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-const DataTable = ({ title, data }: { title: string, data: any[] }) => {
+const SignatureBlock = ({ namaKS, nipKS, kabupaten, printDate }: { namaKS: string, nipKS: string, kabupaten?: string, printDate?: string }) => {
+  const formattedDate = printDate ? new Date(printDate).toLocaleDateString('id-ID', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  }) : new Date().toLocaleDateString('id-ID', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  });
+  
+  const location = kabupaten ? kabupaten.replace(/^(kabupaten|kab\.|kota)\s+/i, '') : 'Indonesia';
+
+  return (
+    <div className="mt-6 flex justify-end text-black break-inside-avoid">
+      <div className="text-left w-64 text-xs">
+        <p>{location}, {formattedDate}</p>
+        <p className="font-semibold mt-0.5">Kepala Sekolah,</p>
+        <div className="h-14" /> {/* Space for signature */}
+        <p className="font-bold underline">{namaKS || "(Nama Kepala Sekolah)"}</p>
+        <p className="text-[10px] text-gray-700">NIP. {nipKS || "-"}</p>
+      </div>
+    </div>
+  );
+};
+
+const DataTable = ({ title, data, namaKS, nipKS, kabupaten, allowedKeys, printDate }: { title: string, data: any[], namaKS: string, nipKS: string, kabupaten?: string, allowedKeys?: string[], printDate?: string }) => {
   if (!data || data.length === 0) return null;
 
   // Pre-process data: Gabungkan elemen alamat jadi satu & hapus kolom yang tidak perlu
@@ -49,8 +75,8 @@ const DataTable = ({ title, data }: { title: string, data: any[] }) => {
       keysToRemoveTTL.forEach(k => delete newRow[k]);
     }
 
-    // Hapus kolom yang secara eksplisit tidak diinginkan (seperti KIP, Jenis Tinggal, NIK, Status)
-    const unwanted = ['kip', 'Kip', 'namaKip', 'NamaKip', 'nama kip', 'jenis tinggal', 'jenisTinggal', 'JenisTinggal', 'nik', 'Nik', 'NIK', 'status', 'Status'];
+    // Hapus kolom yang secara eksplisit tidak diinginkan (seperti KIP, Jenis Tinggal, NIK, Status, Color)
+    const unwanted = ['kip', 'Kip', 'namaKip', 'NamaKip', 'nama kip', 'jenis tinggal', 'jenisTinggal', 'JenisTinggal', 'nik', 'Nik', 'NIK', 'status', 'Status', 'color', 'Color', 'COLOR'];
     unwanted.forEach(k => delete newRow[k]);
 
     return newRow;
@@ -58,8 +84,19 @@ const DataTable = ({ title, data }: { title: string, data: any[] }) => {
 
   let keys = Object.keys(processedData[0]).filter(k => k !== 'id');
   
-  // Jika kolom terlalu banyak (> 7), kita saring menjadi kolom esensial saja agar muat di satu baris (horizontal)
-  if (keys.length > 7) {
+  if (allowedKeys) {
+    keys = keys.filter(k => {
+      const normalizedK = k.toLowerCase().replace(/\s+/g, '');
+      return allowedKeys.some(ak => ak.toLowerCase().replace(/\s+/g, '') === normalizedK);
+    });
+    
+    // Sort keys based on allowedKeys order
+    keys.sort((a, b) => {
+      const idxA = allowedKeys.findIndex(ak => ak.toLowerCase().replace(/\s+/g, '') === a.toLowerCase().replace(/\s+/g, ''));
+      const idxB = allowedKeys.findIndex(ak => ak.toLowerCase().replace(/\s+/g, '') === b.toLowerCase().replace(/\s+/g, ''));
+      return idxA - idxB;
+    });
+  } else if (keys.length > 7) {
     const essentialKeywords = [
       'nama', 'kelas', 'nisn', 'jk', 'jenis kelamin', 
       'alamatlengkap', 'jabatan', 'golongan', 'tempat tanggal'
@@ -100,22 +137,40 @@ const DataTable = ({ title, data }: { title: string, data: any[] }) => {
           {processedData.map((row, i) => (
             <tr key={row.id || i} className="text-black even:bg-slate-50 print:even:bg-gray-50">
               <td className="border border-black px-2 py-1 text-center font-semibold text-xs">{i + 1}</td>
-              {keys.map(k => (
-                <td key={k} className="border border-black px-2 py-1 align-middle text-xs">
-                  {typeof row[k] === 'object' && row[k] !== null 
-                    ? JSON.stringify(row[k]) 
-                    : (row[k] ? String(row[k]) : '-')}
-                </td>
-              ))}
+              {keys.map(k => {
+                 const formatCellValue = (val: any): string => {
+                   if (val === null || val === undefined) return "-";
+                   if (typeof val === 'object') {
+                     if (Array.isArray(val)) {
+                       return val.map(item => formatCellValue(item)).join(", ");
+                     }
+                     const entries = Object.entries(val);
+                     if (entries.length > 0) {
+                       return entries.map(([key, value]) => {
+                         const statusIcon = value === true || String(value).toLowerCase() === 'true' ? "✓" : "✗";
+                         const capitalizedKey = key.charAt(0).toUpperCase() + key.slice(1);
+                         return `${capitalizedKey} (${statusIcon})`;
+                       }).join(", ");
+                     }
+                     return JSON.stringify(val);
+                   }
+                   if (typeof val === 'boolean') {
+                     return val ? "✓" : "✗";
+                   }
+                   return String(val);
+                 };
+
+                 return (
+                   <td key={k} className="border border-black px-2 py-1 align-middle text-xs">
+                     {formatCellValue(row[k])}
+                   </td>
+                 );
+               })}
             </tr>
           ))}
         </tbody>
       </table>
-      {Object.keys(data[0]).filter(k => k !== 'id').length > 7 && (
-        <p className="text-[10px] text-gray-500 italic mt-1">
-          *Hanya menampilkan kolom esensial untuk menghemat ruang cetak.
-        </p>
-      )}
+      <SignatureBlock namaKS={namaKS} nipKS={nipKS} kabupaten={kabupaten} printDate={printDate} />
     </div>
   );
 };
@@ -128,6 +183,16 @@ export default function CetakPage() {
   const [paperSize, setPaperSize] = useState('A4');
   const [coverTitle, setCoverTitle] = useState('DOKUMEN ADMINISTRASI KEPALA SEKOLAH');
   const [coverFooter, setCoverFooter] = useState('Dinas Pendidikan dan Kebudayaan');
+
+  const getTodayDateString = () => {
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  };
+
+  const [printDate, setPrintDate] = useState<string>(getTodayDateString());
 
   useEffect(() => {
     setData(getSchoolData());
@@ -202,6 +267,7 @@ export default function CetakPage() {
           }
           .break-inside-avoid {
             page-break-inside: avoid;
+            break-inside: avoid;
           }
         }
       `}</style>
@@ -213,9 +279,9 @@ export default function CetakPage() {
         <div className="print:hidden bg-white rounded-2xl shadow-sm border border-slate-200 p-5 space-y-4">
           <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
             <Settings className="w-4 h-4 text-indigo-500" />
-            <h2 className="text-sm font-bold text-slate-700 uppercase tracking-wider">Pengaturan Halaman Cover</h2>
+            <h2 className="text-sm font-bold text-slate-700 uppercase tracking-wider">Pengaturan Cetak Dokumen</h2>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="space-y-2">
               <Label className="text-xs font-semibold text-slate-600">Judul Dokumen Besar</Label>
               <Input 
@@ -229,6 +295,15 @@ export default function CetakPage() {
               <Input 
                 value={coverFooter} 
                 onChange={e => setCoverFooter(e.target.value)} 
+                className="text-sm h-10 bg-slate-50 focus-visible:bg-white"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs font-semibold text-slate-600">Tanggal Cetak Dokumen</Label>
+              <Input 
+                type="date"
+                value={printDate} 
+                onChange={e => setPrintDate(e.target.value)} 
                 className="text-sm h-10 bg-slate-50 focus-visible:bg-white"
               />
             </div>
@@ -273,47 +348,29 @@ export default function CetakPage() {
         </div>
 
         {/* --- PAGE 2: IDENTITAS --- */}
-        <div className="bg-white rounded-xl shadow-md border border-slate-200 print:shadow-none print:border-none min-h-[29.7cm] print:min-h-[100vh] w-full p-12 page-break text-black print:text-black shrink-0">
-          <h1 className="text-3xl font-black text-center uppercase border-b-4 border-black pb-5 mb-12 tracking-wide">Identitas Sekolah & Kepala Sekolah</h1>
+        <div className="bg-white rounded-xl shadow-md border border-slate-200 print:shadow-none print:border-none w-full p-12 page-break text-black print:text-black shrink-0 break-inside-avoid">
+          <h1 className="text-2xl font-black text-center uppercase border-b-2 border-black pb-4 mb-8 tracking-wide">Identitas Sekolah</h1>
           
-          <div className="space-y-12">
+          <div className="space-y-8">
             <div>
-              <h2 className="text-xl font-bold bg-slate-100 print:bg-gray-200 p-3 mb-6 border-l-8 border-black pl-4">A. Identitas Lembaga / Sekolah</h2>
-              <table className="w-full text-lg leading-relaxed">
+              <table className="w-full text-sm leading-relaxed">
                 <tbody>
-                  <tr><td className="w-[35%] py-2 font-semibold text-slate-600 print:text-black">Nama Sekolah</td><td className="w-6 text-center font-bold">:</td><td className="font-bold">{identitas.namaSekolah || "-"}</td></tr>
-                  <tr><td className="py-2 font-semibold text-slate-600 print:text-black">NPSN</td><td className="text-center font-bold">:</td><td className="font-medium">{identitas.npsn || "-"}</td></tr>
-                  <tr><td className="py-2 font-semibold text-slate-600 print:text-black">Alamat</td><td className="text-center font-bold">:</td><td className="font-medium">{identitas.alamat || "-"}</td></tr>
-                  <tr><td className="py-2 font-semibold text-slate-600 print:text-black">Kelurahan / Desa</td><td className="text-center font-bold">:</td><td className="font-medium">{identitas.kelurahan || "-"}</td></tr>
-                  <tr><td className="py-2 font-semibold text-slate-600 print:text-black">Kecamatan</td><td className="text-center font-bold">:</td><td className="font-medium">{identitas.kecamatan || "-"}</td></tr>
-                  <tr><td className="py-2 font-semibold text-slate-600 print:text-black">Kabupaten / Kota</td><td className="text-center font-bold">:</td><td className="font-medium">{identitas.kabupaten || "-"}</td></tr>
-                  <tr><td className="py-2 font-semibold text-slate-600 print:text-black">Provinsi</td><td className="text-center font-bold">:</td><td className="font-medium">{identitas.provinsi || "-"}</td></tr>
-                  <tr><td className="py-2 font-semibold text-slate-600 print:text-black">Kode Pos</td><td className="text-center font-bold">:</td><td className="font-medium">{identitas.kodePos || "-"}</td></tr>
-                  <tr><td className="py-2 font-semibold text-slate-600 print:text-black">Telepon</td><td className="text-center font-bold">:</td><td className="font-medium">{identitas.telepon || "-"}</td></tr>
-                  <tr><td className="py-2 font-semibold text-slate-600 print:text-black">Email</td><td className="text-center font-bold">:</td><td className="font-medium">{identitas.email || "-"}</td></tr>
-                  <tr><td className="py-2 font-semibold text-slate-600 print:text-black">Website</td><td className="text-center font-bold">:</td><td className="font-medium">{identitas.website || "-"}</td></tr>
+                  <tr className="border-b border-gray-100/50"><td className="w-[30%] py-1.5 font-bold text-slate-700 print:text-black">Nama Sekolah</td><td className="w-6 text-center font-bold">:</td><td className="font-bold">{identitas.namaSekolah || "-"}</td></tr>
+                  <tr className="border-b border-gray-100/50"><td className="py-1.5 font-bold text-slate-700 print:text-black">NPSN</td><td className="text-center font-bold">:</td><td className="font-medium">{identitas.npsn || "-"}</td></tr>
+                  <tr className="border-b border-gray-100/50"><td className="py-1.5 font-bold text-slate-700 print:text-black">Alamat</td><td className="text-center font-bold">:</td><td className="font-medium">{identitas.alamat || "-"}</td></tr>
+                  <tr className="border-b border-gray-100/50"><td className="py-1.5 font-bold text-slate-700 print:text-black">Kelurahan / Desa</td><td className="text-center font-bold">:</td><td className="font-medium">{identitas.kelurahan || "-"}</td></tr>
+                  <tr className="border-b border-gray-100/50"><td className="py-1.5 font-bold text-slate-700 print:text-black">Kecamatan</td><td className="text-center font-bold">:</td><td className="font-medium">{identitas.kecamatan || "-"}</td></tr>
+                  <tr className="border-b border-gray-100/50"><td className="py-1.5 font-bold text-slate-700 print:text-black">Kabupaten / Kota</td><td className="text-center font-bold">:</td><td className="font-medium">{identitas.kabupaten || "-"}</td></tr>
+                  <tr className="border-b border-gray-100/50"><td className="py-1.5 font-bold text-slate-700 print:text-black">Provinsi</td><td className="text-center font-bold">:</td><td className="font-medium">{identitas.provinsi || "-"}</td></tr>
+                  <tr className="border-b border-gray-100/50"><td className="py-1.5 font-bold text-slate-700 print:text-black">Kode Pos</td><td className="text-center font-bold">:</td><td className="font-medium">{identitas.kodePos || "-"}</td></tr>
+                  <tr className="border-b border-gray-100/50"><td className="py-1.5 font-bold text-slate-700 print:text-black">Telepon</td><td className="text-center font-bold">:</td><td className="font-medium">{identitas.telepon || "-"}</td></tr>
+                  <tr className="border-b border-gray-100/50"><td className="py-1.5 font-bold text-slate-700 print:text-black">Email</td><td className="text-center font-bold">:</td><td className="font-medium">{identitas.email || "-"}</td></tr>
+                  <tr className="border-b border-gray-100/50"><td className="py-1.5 font-bold text-slate-700 print:text-black">Website</td><td className="text-center font-bold">:</td><td className="font-medium">{identitas.website || "-"}</td></tr>
                 </tbody>
               </table>
             </div>
-
-            <div>
-              <h2 className="text-xl font-bold bg-slate-100 print:bg-gray-200 p-3 mb-6 border-l-8 border-black pl-4">B. Identitas Kepala Sekolah</h2>
-              <div className="flex flex-col md:flex-row gap-8">
-                {identitas.fotoKepalaSekolah && (
-                  <div className="w-32 h-40 relative border-2 border-slate-300 print:border-black p-1 shrink-0 bg-white">
-                    <Image src={identitas.fotoKepalaSekolah} alt="Foto KS" fill className="object-cover" />
-                  </div>
-                )}
-                <table className="w-full text-lg leading-relaxed self-start">
-                  <tbody>
-                    <tr><td className="w-[35%] md:w-[40%] py-2 font-semibold text-slate-600 print:text-black">Nama Lengkap</td><td className="w-6 text-center font-bold">:</td><td className="font-bold">{namaKS || "-"}</td></tr>
-                    <tr><td className="py-2 font-semibold text-slate-600 print:text-black">NIP</td><td className="text-center font-bold">:</td><td className="font-medium">{nipKS || "-"}</td></tr>
-                    <tr><td className="py-2 font-semibold text-slate-600 print:text-black">Jabatan</td><td className="text-center font-bold">:</td><td className="font-medium">{identitas.jabatanKepalaSekolah || "-"}</td></tr>
-                    <tr><td className="py-2 font-semibold text-slate-600 print:text-black">Golongan / Ruang</td><td className="text-center font-bold">:</td><td className="font-medium">{identitas.golonganKepalaSekolah || "-"}</td></tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
+            
+            <SignatureBlock namaKS={namaKS} nipKS={nipKS} kabupaten={identitas.kabupaten} printDate={printDate} />
           </div>
         </div>
 
@@ -321,7 +378,16 @@ export default function CetakPage() {
         <div className="bg-white rounded-xl shadow-md border border-slate-200 print:shadow-none print:border-none min-h-[29.7cm] print:min-h-[100vh] w-full p-8 md:p-12 page-break text-black print:text-black shrink-0">
           <h1 className="text-2xl font-black text-center uppercase border-b-4 border-black pb-4 mb-8 tracking-wider">Dokumen Administrasi Kesiswaan</h1>
           {Object.entries(data.kesiswaan).map(([key, records]) => (
-            <DataTable key={key} title={key} data={records as any[]} />
+            <DataTable 
+              key={key} 
+              title={key} 
+              data={records as any[]} 
+              namaKS={namaKS} 
+              nipKS={nipKS} 
+              kabupaten={identitas.kabupaten} 
+              allowedKeys={key === "induk" ? ["nama", "kelas", "nisn", "tempatTanggalLahir", "agama"] : undefined} 
+              printDate={printDate}
+            />
           ))}
           {Object.values(data.kesiswaan).every((v: any) => v.length === 0) && (
             <div className="border-2 border-dashed border-gray-300 p-8 text-center text-gray-500 font-medium">Belum ada entri data kesiswaan.</div>
@@ -332,7 +398,7 @@ export default function CetakPage() {
         <div className="bg-white rounded-xl shadow-md border border-slate-200 print:shadow-none print:border-none min-h-[29.7cm] print:min-h-[100vh] w-full p-8 md:p-12 page-break text-black print:text-black shrink-0">
           <h1 className="text-2xl font-black text-center uppercase border-b-4 border-black pb-4 mb-8 tracking-wider">Dokumen Administrasi Kepegawaian</h1>
           {Object.entries(data.kepegawaian).map(([key, records]) => (
-            <DataTable key={key} title={key} data={records as any[]} />
+            <DataTable key={key} title={key} data={records as any[]} namaKS={namaKS} nipKS={nipKS} kabupaten={identitas.kabupaten} printDate={printDate} />
           ))}
           {Object.values(data.kepegawaian).every((v: any) => v.length === 0) && (
              <div className="border-2 border-dashed border-gray-300 p-8 text-center text-gray-500 font-medium">Belum ada entri data kepegawaian.</div>
@@ -343,7 +409,7 @@ export default function CetakPage() {
         <div className="bg-white rounded-xl shadow-md border border-slate-200 print:shadow-none print:border-none min-h-[29.7cm] print:min-h-[100vh] w-full p-8 md:p-12 page-break text-black print:text-black shrink-0">
           <h1 className="text-2xl font-black text-center uppercase border-b-4 border-black pb-4 mb-8 tracking-wider">Dokumen Administrasi Pembelajaran</h1>
           {Object.entries(data.pembelajaran).map(([key, records]) => (
-            <DataTable key={key} title={key} data={records as any[]} />
+            <DataTable key={key} title={key} data={records as any[]} namaKS={namaKS} nipKS={nipKS} kabupaten={identitas.kabupaten} printDate={printDate} />
           ))}
           {Object.values(data.pembelajaran).every((v: any) => v.length === 0) && (
              <div className="border-2 border-dashed border-gray-300 p-8 text-center text-gray-500 font-medium">Belum ada entri data pembelajaran.</div>
@@ -387,6 +453,7 @@ export default function CetakPage() {
                <div className="border-2 border-dashed border-gray-300 p-6 text-center text-gray-500 font-medium mt-4">Belum ada tautan bukti fisik yang dimasukkan.</div>
             )}
           </div>
+          <SignatureBlock namaKS={namaKS} nipKS={nipKS} kabupaten={identitas.kabupaten} printDate={printDate} />
         </div>
 
       </div>

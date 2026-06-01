@@ -88,7 +88,7 @@ export default function TabBimbingan() {
 
   const fetchStudents = () => {
     try {
-      const data = getDatasetRows("kesiswaan", "pesertadidik");
+      const data = getDatasetRows("kesiswaan", "induk");
       if (Array.isArray(data)) {
         setAllStudents(data);
         const classes = Array.from(new Set(data.map((s: any) => s.kelas).filter(Boolean))) as string[];

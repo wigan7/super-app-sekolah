@@ -10,7 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ChevronDown, ChevronUp, Plus, Upload, FileSpreadsheet, AlertCircle, Check, Edit2, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronUp, Plus, Upload, Download, FileSpreadsheet, AlertCircle, Check, Edit2, Trash2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -76,6 +76,107 @@ export function DataPegawaiTab() {
   const [fileName, setFileName] = useState("");
   const [importError, setImportError] = useState("");
   const [importing, setImporting] = useState(false);
+
+  // States for importing from template Excel
+  const [importTemplateOpen, setImportTemplateOpen] = useState(false);
+  const [templatePreviewData, setTemplatePreviewData] = useState<any[]>([]);
+  const [templateImportMode, setTemplateImportMode] = useState<"append" | "overwrite">("append");
+  const [templateFileName, setTemplateFileName] = useState("");
+  const [templateImportError, setTemplateImportError] = useState("");
+  const [templateImporting, setTemplateImporting] = useState(false);
+
+  const downloadTemplate = async () => {
+    try {
+      const XLSX = await import("xlsx");
+      const headers = [["Nama Lengkap", "NIP", "Jabatan", "Status"]];
+      const sampleData = [
+        ["Budi Santoso, S.Pd.", "198001012005011001", "Guru Mapel Matematika", "PNS"],
+        ["Siti Aminah", "-", "Staf Tata Usaha", "Non-PNS"]
+      ];
+      const ws = XLSX.utils.aoa_to_sheet([...headers, ...sampleData]);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Template Guru Pegawai");
+      XLSX.writeFile(wb, "Template_Guru_Pegawai.xlsx");
+    } catch (err) {
+      console.error("Gagal mendownload template:", err);
+      alert("Terjadi kesalahan saat mengunduh template.");
+    }
+  };
+
+  const handleTemplateFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    
+    const file = files[0];
+    setTemplateFileName(file.name);
+    setTemplateImportError("");
+    setTemplatePreviewData([]);
+
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      try {
+        const XLSX = await import("xlsx");
+        const data = new Uint8Array(event.target?.result as ArrayBuffer);
+        const workbook = XLSX.read(data, { type: "array" });
+        const sheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[sheetName];
+        
+        const rawRows = XLSX.utils.sheet_to_json<any>(sheet);
+        
+        if (rawRows.length === 0) {
+          setTemplateImportError("File Excel kosong.");
+          return;
+        }
+
+        const parsedPegawai: any[] = [];
+        for (const row of rawRows) {
+          const namaVal = String(row["Nama Lengkap"] || row["nama lengkap"] || row["Nama"] || row["nama"] || "").trim();
+          if (!namaVal) continue;
+
+          let nipVal = String(row["NIP"] || row["nip"] || "").trim();
+          if (nipVal === "-" || nipVal.toLowerCase() === "null") nipVal = "";
+
+          const jabatanVal = String(row["Jabatan"] || row["jabatan"] || "Guru").trim();
+          const statusVal = String(row["Status"] || row["status"] || "PNS").trim();
+
+          parsedPegawai.push({
+            nama: namaVal,
+            nip: nipVal || "-",
+            jabatan: jabatanVal,
+            status: statusVal,
+          });
+        }
+
+        if (parsedPegawai.length === 0) {
+          setTemplateImportError("Tidak ada data pegawai yang valid ditemukan. Pastikan kolom memiliki header 'Nama Lengkap', 'NIP', 'Jabatan', dan 'Status'.");
+        } else {
+          setTemplatePreviewData(parsedPegawai);
+        }
+      } catch (err) {
+        console.error(err);
+        setTemplateImportError("Gagal membaca file Excel. Pastikan format file valid.");
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  };
+
+  const handleTemplateImportSubmit = () => {
+    if (templatePreviewData.length === 0) return;
+    setTemplateImporting(true);
+    try {
+      importDatasetRows("kepegawaian", "pegawai", templatePreviewData, templateImportMode);
+
+      setImportTemplateOpen(false);
+      setTemplatePreviewData([]);
+      setTemplateFileName("");
+      fetchRows();
+    } catch (err) {
+      console.error(err);
+      alert("Terjadi kesalahan saat mengimpor data.");
+    } finally {
+      setTemplateImporting(false);
+    }
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -204,7 +305,22 @@ export function DataPegawaiTab() {
   const fetchRows = () => {
     try {
       const data = getDatasetRows("kepegawaian", "pegawai");
-      setRows(Array.isArray(data) ? (data as Pegawai[]) : []);
+      let list = Array.isArray(data) ? (data as Pegawai[]) : [];
+      // Sanitize
+      list = list.filter(item => item && item.nama);
+      // Ensure unique IDs
+      let changed = false;
+      const sanitized = list.map((item, i) => {
+        if (!item.id) {
+          changed = true;
+          return { ...item, id: `${Date.now() + i}-${Math.random().toString(36).substring(2, 9)}` };
+        }
+        return item;
+      });
+      if (changed) {
+        importDatasetRows("kepegawaian", "pegawai", sanitized, "overwrite");
+      }
+      setRows(sanitized);
     } catch (error) {
       console.error("Gagal memuat data pegawai:", error);
     }
@@ -413,6 +529,146 @@ export function DataPegawaiTab() {
                   className="bg-emerald-600 hover:bg-emerald-700 text-white"
                 >
                   {importing ? "Mengimpor..." : `Import ${previewData.length} Pegawai`}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          <Button variant="outline" className="border-slate-200 text-slate-700 hover:bg-slate-50" onClick={downloadTemplate}>
+            <Download className="h-4 w-4 mr-2 text-slate-500" />
+            Template Excel
+          </Button>
+
+          {/* Dialog Import dari Template Excel */}
+          <Dialog open={importTemplateOpen} onOpenChange={(val) => {
+            setImportTemplateOpen(val);
+            if (!val) {
+              setTemplatePreviewData([]);
+              setTemplateFileName("");
+              setTemplateImportError("");
+            }
+          }}>
+            <DialogTrigger render={<Button variant="outline" className="border-slate-200 text-slate-700 hover:bg-slate-50" />}>
+              <Upload className="h-4 w-4 mr-2 text-slate-500" />
+              Import Excel
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>Import Data Pegawai dari Template Excel</DialogTitle>
+                <DialogDescription>
+                  Pilih file Excel (.xlsx atau .xls) yang menggunakan format template kami. Kolom minimal: Nama Lengkap, NIP, Jabatan, Status.
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="space-y-4 my-2">
+                {/* Upload Area */}
+                <div className="border-2 border-dashed border-slate-200 rounded-xl p-6 flex flex-col items-center justify-center bg-slate-50 hover:bg-slate-50/80 transition-colors relative">
+                  <input
+                    type="file"
+                    accept=".xlsx,.xls"
+                    onChange={handleTemplateFileChange}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  />
+                  <FileSpreadsheet className="h-10 w-10 text-emerald-600 mb-2" />
+                  <p className="text-sm font-medium text-slate-700">
+                    {templateFileName ? templateFileName : "Pilih atau Seret File Excel Template"}
+                  </p>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Format file yang didukung: .xlsx, .xls
+                  </p>
+                </div>
+
+                {templateImportError && (
+                  <div className="bg-red-50 border border-red-200 text-red-700 text-xs p-3 rounded-lg flex items-start gap-2">
+                    <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                    <span>{templateImportError}</span>
+                  </div>
+                )}
+
+                {templatePreviewData.length > 0 && (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-semibold text-slate-900">
+                        Preview Data ({templatePreviewData.length} Pegawai Terdeteksi)
+                      </p>
+                      {/* Opsi mode import */}
+                      <div className="flex items-center gap-2 bg-slate-100 p-1 rounded-lg text-xs font-medium text-slate-600">
+                        <button
+                          type="button"
+                          className={`px-3 py-1 rounded-md transition-all ${
+                            templateImportMode === "append"
+                              ? "bg-white text-slate-900 shadow-sm"
+                              : "hover:text-slate-900"
+                          }`}
+                          onClick={() => setTemplateImportMode("append")}
+                        >
+                          Tambah Data
+                        </button>
+                        <button
+                          type="button"
+                          className={`px-3 py-1 rounded-md transition-all ${
+                            templateImportMode === "overwrite"
+                              ? "bg-white text-red-600 shadow-sm font-bold"
+                              : "hover:text-slate-900"
+                          }`}
+                          onClick={() => setTemplateImportMode("overwrite")}
+                        >
+                          Ganti Semua
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="border border-slate-200 rounded-lg max-h-60 overflow-y-auto">
+                      <table className="w-full text-left text-xs border-collapse">
+                        <thead className="bg-slate-50 sticky top-0 border-b border-slate-200 z-10">
+                          <tr>
+                            <th className="px-3 py-2 text-slate-600 font-semibold bg-slate-50">Nama Lengkap</th>
+                            <th className="px-3 py-2 text-slate-600 font-semibold bg-slate-50">NIP</th>
+                            <th className="px-3 py-2 text-slate-600 font-semibold bg-slate-50">Jabatan</th>
+                            <th className="px-3 py-2 text-slate-600 font-semibold bg-slate-50">Status</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                          {templatePreviewData.slice(0, 50).map((row, idx) => (
+                            <tr key={idx} className="hover:bg-slate-50/50">
+                              <td className="px-3 py-2 font-medium text-slate-900">{row.nama}</td>
+                              <td className="px-3 py-2 text-slate-500">{row.nip}</td>
+                              <td className="px-3 py-2 text-slate-500">{row.jabatan}</td>
+                              <td className="px-3 py-2 text-slate-500">
+                                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium ${
+                                  row.status === "PNS"
+                                    ? "bg-blue-100 text-blue-800"
+                                    : "bg-slate-100 text-slate-800"
+                                }`}>
+                                  {row.status}
+                                </span>
+                              </td>
+                            </tr>
+                          ))}
+                          {templatePreviewData.length > 50 && (
+                            <tr>
+                              <td colSpan={4} className="px-3 py-2 text-center text-slate-400 bg-slate-50/30">
+                                ... Dan {templatePreviewData.length - 50} data pegawai lainnya ...
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setTemplateImportOpen(false)} disabled={templateImporting}>
+                  Batal
+                </Button>
+                <Button
+                  onClick={handleTemplateImportSubmit}
+                  disabled={templatePreviewData.length === 0 || templateImporting}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                >
+                  {templateImporting ? "Mengimpor..." : `Import ${templatePreviewData.length} Pegawai`}
                 </Button>
               </DialogFooter>
             </DialogContent>

@@ -17,7 +17,9 @@ import {
   Globe, 
   Hash, 
   BadgeInfo,
-  Camera
+  Camera,
+  Upload,
+  Download
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -152,6 +154,108 @@ export default function IdentitasPage() {
       ...prev,
       [field]: value,
     }));
+  };
+
+  const downloadTemplate = async () => {
+    try {
+      const XLSX = await import("xlsx");
+      const headers = [[
+        "Nama Sekolah",
+        "NPSN",
+        "Alamat",
+        "Kelurahan",
+        "Kecamatan",
+        "Kabupaten",
+        "Provinsi",
+        "Kode Pos",
+        "Telepon",
+        "Email",
+        "Website",
+        "Jabatan Kepala Sekolah",
+        "Golongan Kepala Sekolah"
+      ]];
+      const currentData = [[
+        form.namaSekolah || "",
+        form.npsn || "",
+        form.alamat || "",
+        form.kelurahan || "",
+        form.kecamatan || "",
+        form.kabupaten || "",
+        form.provinsi || "",
+        form.kodePos || "",
+        form.telepon || "",
+        form.email || "",
+        form.website || "",
+        form.jabatanKepalaSekolah || "",
+        form.golonganKepalaSekolah || ""
+      ]];
+      
+      const ws = XLSX.utils.aoa_to_sheet([...headers, ...currentData]);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Identitas Sekolah");
+      XLSX.writeFile(wb, "Template_Identitas_Sekolah.xlsx");
+    } catch (err) {
+      console.error("Gagal mendownload template:", err);
+      alert("Terjadi kesalahan saat mengunduh template.");
+    }
+  };
+
+  const handleImportExcel = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    
+    const file = files[0];
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      try {
+        const XLSX = await import("xlsx");
+        const data = new Uint8Array(event.target?.result as ArrayBuffer);
+        const workbook = XLSX.read(data, { type: "array" });
+        const sheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[sheetName];
+        
+        const rawRows = XLSX.utils.sheet_to_json<any>(sheet);
+        
+        if (rawRows.length === 0) {
+          alert("File Excel kosong atau tidak valid.");
+          return;
+        }
+
+        const firstRow = rawRows[0];
+        const getVal = (keys: string[]) => {
+          for (const key of keys) {
+            const foundKey = Object.keys(firstRow).find(k => k.toLowerCase().trim() === key.toLowerCase().trim());
+            if (foundKey) return String(firstRow[foundKey] ?? "").trim();
+          }
+          return "";
+        };
+
+        const importedForm = {
+          ...form,
+          namaSekolah: getVal(["Nama Sekolah", "nama_sekolah", "nama sekolah"]),
+          npsn: getVal(["NPSN", "npsn"]),
+          alamat: getVal(["Alamat", "alamat"]),
+          kelurahan: getVal(["Kelurahan", "kelurahan", "kelurahan/desa", "kelurahan / desa"]),
+          kecamatan: getVal(["Kecamatan", "kecamatan"]),
+          kabupaten: getVal(["Kabupaten", "kabupaten", "kabupaten/kota", "kabupaten / kota"]),
+          provinsi: getVal(["Provinsi", "provinsi"]),
+          kodePos: getVal(["Kode Pos", "kode_pos", "kode pos"]),
+          telepon: getVal(["Telepon", "telepon", "no telepon"]),
+          email: getVal(["Email", "email"]),
+          website: getVal(["Website", "website"]),
+          jabatanKepalaSekolah: getVal(["Jabatan Kepala Sekolah", "jabatan kepala sekolah", "jabatan_kepala_sekolah"]),
+          golonganKepalaSekolah: getVal(["Golongan Kepala Sekolah", "golongan kepala sekolah", "golongan_kepala_sekolah"]),
+        };
+
+        setForm(importedForm);
+        alert("Berhasil mengimpor data dari Excel! Silakan klik 'Simpan Perubahan' untuk menyimpan secara permanen.");
+      } catch (err) {
+        console.error(err);
+        alert("Gagal membaca file Excel. Pastikan format file sesuai.");
+      }
+    };
+    reader.readAsArrayBuffer(file);
+    e.target.value = "";
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -486,7 +590,30 @@ export default function IdentitasPage() {
               </Card>
 
               {/* Action Buttons */}
-              <div className="flex items-center justify-end gap-3 border border-white/50 bg-white/70 backdrop-blur-lg p-4 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.01)]">
+              <div className="flex items-center justify-between gap-3 border border-white/50 bg-white/70 backdrop-blur-lg p-4 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.01)]">
+                <div className="flex items-center gap-2">
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    className="border-slate-200 text-slate-700 hover:bg-slate-50 rounded-xl h-11"
+                    onClick={downloadTemplate}
+                  >
+                    <Download className="h-4 w-4 mr-2 text-slate-500" />
+                    Template Excel
+                  </Button>
+                  
+                  <label className="border border-slate-200 text-slate-700 hover:bg-slate-50 rounded-xl h-11 px-4 flex items-center justify-center gap-2 text-sm font-medium cursor-pointer bg-white transition-colors">
+                    <Upload className="h-4 w-4 text-slate-500" />
+                    <span>Import Excel</span>
+                    <input 
+                      type="file" 
+                      accept=".xlsx,.xls" 
+                      onChange={handleImportExcel} 
+                      className="hidden" 
+                    />
+                  </label>
+                </div>
+
                 <Button 
                   type="submit" 
                   disabled={saving}
