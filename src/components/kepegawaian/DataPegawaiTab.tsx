@@ -660,7 +660,7 @@ export function DataPegawaiTab() {
               </div>
 
               <DialogFooter>
-                <Button variant="outline" onClick={() => setTemplateImportOpen(false)} disabled={templateImporting}>
+                <Button variant="outline" onClick={() => setImportTemplateOpen(false)} disabled={templateImporting}>
                   Batal
                 </Button>
                 <Button
