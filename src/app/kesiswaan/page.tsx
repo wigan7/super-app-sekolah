@@ -2,7 +2,7 @@ import KesiswaanTabs from "./components/KesiswaanTabs";
 import { Users } from "lucide-react";
 
 export const metadata = {
-  title: "Data Kesiswaan | Pak Candra Super App",
+  title: "Data Kesiswaan | SIMAKS",
   description: "Manajemen data kesiswaan terpadu",
 };
 

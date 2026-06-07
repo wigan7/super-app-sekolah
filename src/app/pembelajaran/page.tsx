@@ -1,9 +1,10 @@
+import { Metadata } from "next";
 import PembelajaranTabs from "./components/PembelajaranTabs";
 import { BookOpen } from "lucide-react";
 
-export const metadata = {
-  title: "Pembelajaran & Kurikulum | Pak Candra Super App",
-  description: "Manajemen pembelajaran, supervisi, bimbingan, dan kurikulum",
+export const metadata: Metadata = {
+  title: "Pembelajaran & Kurikulum | SIMAKS",
+  description: "Manajemen data pembelajaran dan kurikulum sekolah",
 };
 
 export default function PembelajaranPage() {

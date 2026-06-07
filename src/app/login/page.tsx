@@ -61,7 +61,7 @@ export default function LoginPage() {
           >
             <Image
               src="/logo.png"
-              alt="Logo Pak Candra Super App"
+              alt="Logo SIMAKS"
               width={880}
               height={320}
               className="w-full h-auto object-contain"
@@ -73,7 +73,7 @@ export default function LoginPage() {
             Portal Resmi Kepala Sekolah
           </div>
           <h1 className="text-3xl font-extrabold text-transparent bg-clip-text bg-linear-to-r from-indigo-900 to-purple-900 mb-2 text-center">
-            Pak Candra Super App
+            SIMAKS
           </h1>
           <p className="text-slate-500 font-medium text-center text-sm">
             Silakan login untuk mengakses dashboard manajemen sekolah terpadu.
@@ -151,7 +151,7 @@ export default function LoginPage() {
             Sistem Informasi Terenkripsi & Aman
           </p>
           <p className="mt-2 text-[11px] text-slate-400 font-semibold tracking-wide uppercase">
-            Pak Candra Super App
+            SIMAKS
           </p>
         </div>
       </motion.div>

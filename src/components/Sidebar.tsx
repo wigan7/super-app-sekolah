@@ -201,7 +201,7 @@ export function Sidebar() {
             <div className="flex-1 flex justify-center items-center pr-2">
               <img 
                 src="/logo.png?v=2" 
-                alt="Pak Candra Super App Logo" 
+                alt="SIMAKS Logo" 
                 className="object-contain w-full h-auto max-w-40 drop-shadow-sm" 
               />
             </div>

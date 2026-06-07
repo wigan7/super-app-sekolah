@@ -4,14 +4,16 @@ import "./globals.css";
 import { Sidebar } from "@/components/Sidebar";
 import { SidebarProvider } from "@/providers/SidebarProvider";
 import { AuthProvider } from "@/providers/AuthProvider";
+import { Footer } from "@/components/Footer";
+
 const inter = Inter({
   variable: "--font-sans",
   subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
-  title: "Pak Candra Super App",
-  description: "Pak Candra Super App - Dashboard untuk Kepala Sekolah",
+  title: "SIMAKS",
+  description: "SIMAKS (Sistem Informasi Manajemen Administrasi Kepala Sekolah)",
 };
 
 export default function RootLayout({
@@ -30,6 +32,7 @@ export default function RootLayout({
             <Sidebar />
             <main className="flex-1 flex flex-col min-h-screen lg:min-h-0 w-full relative z-10">
               {children}
+              <Footer />
             </main>
           </AuthProvider>
         </SidebarProvider>
