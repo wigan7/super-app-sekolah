@@ -60,7 +60,7 @@ export default function LoginPage() {
             className="w-full max-w-55 bg-white/70 rounded-2xl border border-slate-200/70 shadow-lg shadow-slate-900/5 p-3 mb-5"
           >
             <Image
-              src="/logo.png"
+              src="/logo-simaks.png"
               alt="Logo SIMAKS"
               width={880}
               height={320}
@@ -76,7 +76,7 @@ export default function LoginPage() {
             SIMAKS
           </h1>
           <p className="text-slate-500 font-medium text-center text-sm">
-            Silakan login untuk mengakses dashboard manajemen sekolah terpadu.
+            Sistem Informasi Manajemen Administrasi Kepala Sekolah
           </p>
         </div>
 

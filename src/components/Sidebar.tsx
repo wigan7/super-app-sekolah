@@ -200,7 +200,7 @@ export function Sidebar() {
           <div className="p-5 flex items-center justify-between">
             <div className="flex-1 flex justify-center items-center pr-2">
               <img 
-                src="/logo.png?v=2" 
+                src="/logo-simaks.png" 
                 alt="SIMAKS Logo" 
                 className="object-contain w-full h-auto max-w-40 drop-shadow-sm" 
               />
