@@ -53,8 +53,8 @@ export default function LoginPage() {
       await signInWithPopup(auth, provider);
       router.push("/");
     } catch (err: any) {
-      console.error(err);
-      setError("Gagal login dengan Google. Silakan coba lagi.");
+      console.error("Google Login Error:", err);
+      setError(`Gagal login dengan Google: ${err.message || "Unknown error"}`);
     } finally {
       setLoading(false);
     }
