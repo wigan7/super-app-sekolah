@@ -23,7 +23,10 @@ import {
   PanelLeftClose,
   UserCircle,
   LogOut,
-  Printer
+  Printer,
+  CloudUpload,
+  CloudDownload,
+  Loader2
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import {
@@ -36,6 +39,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { getIdentitas, resetSchoolData, getSchoolData, writeSchoolData } from "@/lib/clientDb";
+import { saveDataToCloud, loadDataFromCloud } from "@/lib/cloudSync";
 
 const navItems = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
@@ -50,7 +54,7 @@ const navItems = [
 export function Sidebar() {
   const pathname = usePathname();
   const { isOpen, toggleSidebar } = useSidebar();
-  const { headmasterData, logout } = useAuth();
+  const { user, headmasterData, logout } = useAuth();
   const [identitas, setIdentitas] = useState<{ namaKepalaSekolah?: string; namaSekolah?: string; fotoKepalaSekolah?: string }>({});
 
   useEffect(() => {
@@ -86,6 +90,10 @@ export function Sidebar() {
   const [importing, setImporting] = useState(false);
   const [importSuccess, setImportSuccess] = useState(false);
   const [fileError, setFileError] = useState("");
+  const [cloudSaving, setCloudSaving] = useState(false);
+  const [cloudSaveSuccess, setCloudSaveSuccess] = useState(false);
+  const [cloudLoading, setCloudLoading] = useState(false);
+  const [cloudLoadSuccess, setCloudLoadSuccess] = useState(false);
 
   // Reset States
   const [openReset, setOpenReset] = useState(false);
@@ -110,6 +118,45 @@ export function Sidebar() {
     } catch (err) {
       console.error("Gagal melakukan export:", err);
       alert("Gagal mengunduh backup data.");
+    }
+  };
+
+  const handleCloudSave = async () => {
+    if (!user) return;
+    try {
+      setCloudSaving(true);
+      setCloudSaveSuccess(false);
+      setFileError("");
+      const data = getSchoolData();
+      await saveDataToCloud(user.uid, data);
+      setCloudSaveSuccess(true);
+      setTimeout(() => setCloudSaveSuccess(false), 3000);
+    } catch (err: any) {
+      console.error("Gagal menyimpan ke cloud:", err);
+      setFileError(err.message || "Gagal menyimpan data ke Cloud.");
+    } finally {
+      setCloudSaving(false);
+    }
+  };
+
+  const handleCloudLoad = async () => {
+    if (!user) return;
+    try {
+      setCloudLoading(true);
+      setCloudLoadSuccess(false);
+      setFileError("");
+      const data = await loadDataFromCloud(user.uid);
+      writeSchoolData(data);
+      setCloudLoadSuccess(true);
+      setTimeout(() => {
+        setOpenBackup(false);
+        window.location.reload();
+      }, 1500);
+    } catch (err: any) {
+      console.error("Gagal memuat dari cloud:", err);
+      setFileError(err.message || "Gagal memuat data dari Cloud.");
+    } finally {
+      setCloudLoading(false);
     }
   };
 
@@ -336,25 +383,56 @@ export function Sidebar() {
               <div className="bg-white/50 border border-slate-200 rounded-xl p-4 flex flex-col gap-3">
                 <div className="flex flex-col">
                   <span className="text-xs font-bold text-slate-800">1. Ekspor Data Sekolah (Backup)</span>
-                  <span className="text-[10px] text-slate-400 mt-0.5">Menyimpan seluruh identitas, kesiswaan, kepegawaian, dan PKKS ke format JSON.</span>
+                  <span className="text-[10px] text-slate-400 mt-0.5">Menyimpan seluruh identitas, kesiswaan, kepegawaian, dan PKKS.</span>
                 </div>
-                <Button 
-                  onClick={handleExport}
-                  className="bg-primary hover:bg-primary/90 text-white text-xs font-semibold h-10 rounded-xl cursor-pointer flex items-center justify-center gap-2 w-full active:scale-95 transition-all"
-                >
-                  <Download className="w-4 h-4" />
-                  Unduh Berkas Cadangan (.json)
-                </Button>
+                <div className="flex gap-2">
+                  <Button 
+                    onClick={handleExport}
+                    className="flex-1 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-semibold h-10 rounded-xl cursor-pointer flex items-center justify-center gap-2 active:scale-95 transition-all"
+                  >
+                    <Download className="w-4 h-4" />
+                    Lokal (.json)
+                  </Button>
+                  <Button 
+                    onClick={handleCloudSave}
+                    disabled={cloudSaving || cloudSaveSuccess}
+                    className="flex-1 bg-primary hover:bg-primary/90 text-white text-xs font-semibold h-10 rounded-xl cursor-pointer flex items-center justify-center gap-2 active:scale-95 transition-all"
+                  >
+                    {cloudSaving ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : cloudSaveSuccess ? (
+                      <CheckCircle2 className="w-4 h-4" />
+                    ) : (
+                      <CloudUpload className="w-4 h-4" />
+                    )}
+                    {cloudSaving ? "Menyimpan..." : cloudSaveSuccess ? "Berhasil!" : "Simpan ke Cloud"}
+                  </Button>
+                </div>
               </div>
 
               {/* Import Area */}
               <div className="bg-white/50 border border-slate-200 rounded-xl p-4 flex flex-col gap-3">
                 <div className="flex flex-col">
                   <span className="text-xs font-bold text-slate-800">2. Impor Data Sekolah (Restore)</span>
-                  <span className="text-[10px] text-slate-400 mt-0.5">Unggah berkas cadangan (.json) untuk memulihkan seluruh data sebelumnya.</span>
+                  <span className="text-[10px] text-slate-400 mt-0.5">Pulihkan seluruh data dari berkas lokal (.json) atau dari Cloud.</span>
                 </div>
 
-                <div className="relative">
+                <Button 
+                  onClick={handleCloudLoad}
+                  disabled={cloudLoading || cloudLoadSuccess}
+                  className="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold h-10 rounded-xl cursor-pointer flex items-center justify-center gap-2 active:scale-95 transition-all"
+                >
+                  {cloudLoading ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : cloudLoadSuccess ? (
+                    <CheckCircle2 className="w-4 h-4" />
+                  ) : (
+                    <CloudDownload className="w-4 h-4" />
+                  )}
+                  {cloudLoading ? "Memuat..." : cloudLoadSuccess ? "Berhasil!" : "Muat dari Cloud"}
+                </Button>
+
+                <div className="relative mt-2">
                   <input
                     type="file"
                     accept=".json"
@@ -365,7 +443,7 @@ export function Sidebar() {
                   <div className={`border rounded-xl p-4 text-center transition-colors flex flex-col items-center justify-center gap-2
                     ${importSuccess 
                       ? 'border-emerald-300 bg-emerald-50' 
-                      : fileError 
+                      : fileError && !cloudSaving && !cloudLoading
                         ? 'border-rose-300 bg-rose-50' 
                         : 'border-slate-300 bg-white'
                     }`}
@@ -377,18 +455,17 @@ export function Sidebar() {
                           transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
                           className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full"
                         />
-                        <span className="text-[10px] font-semibold text-slate-500">Sedang memproses data...</span>
+                        <span className="text-[10px] font-semibold text-slate-500">Sedang memproses data lokal...</span>
                       </div>
                     ) : importSuccess ? (
                       <div className="flex flex-col items-center gap-1 text-emerald-600 py-1">
                         <CheckCircle2 className="w-6 h-6 text-emerald-500 animate-bounce" />
-                        <span className="text-[10px] font-bold">Impor Berhasil! Memuat ulang halaman...</span>
+                        <span className="text-[10px] font-bold">Impor Lokal Berhasil! Memuat ulang...</span>
                       </div>
                     ) : (
                       <>
-                        <Upload className="w-5 h-5 text-primary" />
-                        <span className="text-[10px] font-semibold text-primary">Klik untuk memilih berkas JSON backup</span>
-                        <span className="text-[9px] text-slate-400">Hanya berkas valid dari aplikasi ini</span>
+                        <Upload className="w-5 h-5 text-slate-400" />
+                        <span className="text-[10px] font-semibold text-slate-600">Atau klik untuk memilih berkas JSON lokal</span>
                       </>
                     )}
                   </div>
