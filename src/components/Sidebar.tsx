@@ -95,12 +95,20 @@ export function Sidebar() {
   const [cloudLoading, setCloudLoading] = useState(false);
   const [cloudLoadSuccess, setCloudLoadSuccess] = useState(false);
 
-  // Reset States
   const [openReset, setOpenReset] = useState(false);
   const [resetConfirmText, setResetConfirmText] = useState("");
   const [resetting, setResetting] = useState(false);
   const [resetSuccess, setResetSuccess] = useState(false);
   const [resetError, setResetError] = useState("");
+
+  // Logout States
+  const [openLogout, setOpenLogout] = useState(false);
+
+  // Confirm Dialogs
+  const [openConfirmCloudSave, setOpenConfirmCloudSave] = useState(false);
+  const [openConfirmCloudLoad, setOpenConfirmCloudLoad] = useState(false);
+  const [openConfirmLocalLoad, setOpenConfirmLocalLoad] = useState(false);
+  const [pendingLocalData, setPendingLocalData] = useState<any>(null);
 
   const handleExport = () => {
     try {
@@ -179,6 +187,23 @@ export function Sidebar() {
     }
   };
 
+  const processLocalLoad = async (parsed: any) => {
+    try {
+      setImporting(true);
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      writeSchoolData(parsed);
+      setImportSuccess(true);
+      setTimeout(() => {
+        setOpenBackup(false);
+        window.location.reload();
+      }, 1500);
+    } catch (err) {
+      setFileError("Terjadi kesalahan saat memproses data.");
+    } finally {
+      setImporting(false);
+    }
+  };
+
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -202,25 +227,14 @@ export function Sidebar() {
           return;
         }
 
-        setImporting(true);
-        
-        // Simulasikan delay sedikit agar UI loading terlihat
-        await new Promise((resolve) => setTimeout(resolve, 500));
-        
-        writeSchoolData(parsed);
-
-        setImportSuccess(true);
-        setTimeout(() => {
-          setOpenBackup(false);
-          window.location.reload();
-        }, 1500);
+        setPendingLocalData(parsed);
+        setOpenConfirmLocalLoad(true);
       } catch (err) {
         setFileError("Berkas rusak atau bukan format JSON yang valid.");
-      } finally {
-        setImporting(false);
       }
     };
     reader.readAsText(file);
+    e.target.value = '';
   };
 
   if (pathname === "/login") {
@@ -362,6 +376,118 @@ export function Sidebar() {
           </DialogContent>
         </Dialog>
 
+        {/* Confirmation Dialogs */}
+        <Dialog open={openConfirmCloudSave} onOpenChange={setOpenConfirmCloudSave}>
+          <DialogContent className="sm:max-w-md rounded-[32px] ios-glass border border-slate-200/60 p-6">
+            <DialogHeader className="space-y-1.5">
+              <DialogTitle className="text-base font-bold text-slate-900 flex items-center gap-2">
+                <CloudUpload className="w-5 h-5 text-primary" />
+                Konfirmasi Simpan ke Cloud
+              </DialogTitle>
+              <DialogDescription className="text-xs text-slate-500 leading-relaxed">
+                Apakah Anda yakin ingin menyimpan data ke Cloud? Tindakan ini akan <strong>menimpa (overwrite)</strong> penyimpanan data sebelumnya.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="flex gap-2.5 pt-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setOpenConfirmCloudSave(false)}
+                className="flex-1 text-xs h-10 rounded-xl border-slate-200 cursor-pointer"
+              >
+                Batal
+              </Button>
+              <Button
+                type="button"
+                onClick={() => {
+                  setOpenConfirmCloudSave(false);
+                  handleCloudSave();
+                }}
+                className="flex-1 bg-primary hover:bg-primary/90 text-white text-xs font-semibold h-10 rounded-xl flex items-center justify-center gap-1.5 active:scale-95 transition-transform cursor-pointer"
+              >
+                Ya, Simpan Data
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={openConfirmCloudLoad} onOpenChange={setOpenConfirmCloudLoad}>
+          <DialogContent className="sm:max-w-md rounded-[32px] ios-glass border border-slate-200/60 p-6">
+            <DialogHeader className="space-y-1.5">
+              <DialogTitle className="text-base font-bold text-slate-900 flex items-center gap-2">
+                <CloudDownload className="w-5 h-5 text-indigo-600" />
+                Konfirmasi Muat dari Cloud
+              </DialogTitle>
+              <DialogDescription className="text-xs text-slate-500 leading-relaxed">
+                Apakah Anda yakin ingin memuat data dari Cloud? Tindakan ini akan <span className="text-rose-600 font-bold">menghapus dan menimpa</span> semua data lokal Anda saat ini.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="flex gap-2.5 pt-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setOpenConfirmCloudLoad(false)}
+                className="flex-1 text-xs h-10 rounded-xl border-slate-200 cursor-pointer"
+              >
+                Batal
+              </Button>
+              <Button
+                type="button"
+                onClick={() => {
+                  setOpenConfirmCloudLoad(false);
+                  handleCloudLoad();
+                }}
+                className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold h-10 rounded-xl flex items-center justify-center gap-1.5 active:scale-95 transition-transform cursor-pointer"
+              >
+                Ya, Muat Data
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={openConfirmLocalLoad} onOpenChange={(val) => {
+          setOpenConfirmLocalLoad(val);
+          if (!val) setPendingLocalData(null);
+        }}>
+          <DialogContent className="sm:max-w-md rounded-[32px] ios-glass border border-slate-200/60 p-6">
+            <DialogHeader className="space-y-1.5">
+              <DialogTitle className="text-base font-bold text-slate-900 flex items-center gap-2">
+                <Upload className="w-5 h-5 text-emerald-600" />
+                Konfirmasi Impor Lokal
+              </DialogTitle>
+              <DialogDescription className="text-xs text-slate-500 leading-relaxed">
+                Apakah Anda yakin ingin memuat data dari berkas lokal ini? Tindakan ini akan <span className="text-rose-600 font-bold">menghapus dan menimpa</span> semua data lokal Anda saat ini.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="flex gap-2.5 pt-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setOpenConfirmLocalLoad(false)}
+                className="flex-1 text-xs h-10 rounded-xl border-slate-200 cursor-pointer"
+              >
+                Batal
+              </Button>
+              <Button
+                type="button"
+                onClick={() => {
+                  setOpenConfirmLocalLoad(false);
+                  if (pendingLocalData) {
+                    processLocalLoad(pendingLocalData);
+                    setPendingLocalData(null);
+                  }
+                }}
+                className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold h-10 rounded-xl flex items-center justify-center gap-1.5 active:scale-95 transition-transform cursor-pointer"
+              >
+                Ya, Impor Data
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
         <Dialog open={openBackup} onOpenChange={setOpenBackup}>
           <DialogTrigger render={<button className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-primary hover:bg-primary/10 transition-all cursor-pointer" />}>
             <Database className="w-4 h-4 text-primary shrink-0" />
@@ -394,7 +520,7 @@ export function Sidebar() {
                     Lokal (.json)
                   </Button>
                   <Button 
-                    onClick={handleCloudSave}
+                    onClick={() => setOpenConfirmCloudSave(true)}
                     disabled={cloudSaving || cloudSaveSuccess}
                     className="flex-1 bg-primary hover:bg-primary/90 text-white text-xs font-semibold h-10 rounded-xl cursor-pointer flex items-center justify-center gap-2 active:scale-95 transition-all"
                   >
@@ -418,7 +544,7 @@ export function Sidebar() {
                 </div>
 
                 <Button 
-                  onClick={handleCloudLoad}
+                  onClick={() => setOpenConfirmCloudLoad(true)}
                   disabled={cloudLoading || cloudLoadSuccess}
                   className="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold h-10 rounded-xl cursor-pointer flex items-center justify-center gap-2 active:scale-95 transition-all"
                 >
@@ -502,13 +628,55 @@ export function Sidebar() {
               </span>
             </div>
           </Link>
-          <button
-            onClick={logout}
-            title="Keluar"
-            className="shrink-0 w-9 h-9 flex items-center justify-center rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 border border-transparent hover:border-rose-100 transition-all active:scale-95 cursor-pointer"
-          >
-            <LogOut className="w-4 h-4" />
-          </button>
+          <Dialog open={openLogout} onOpenChange={setOpenLogout}>
+            <DialogTrigger asChild>
+              <button
+                title="Keluar"
+                className="shrink-0 w-9 h-9 flex items-center justify-center rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 border border-transparent hover:border-rose-100 transition-all active:scale-95 cursor-pointer"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-md rounded-[32px] ios-glass border border-slate-200/60 p-6">
+              <DialogHeader className="space-y-1.5">
+                <DialogTitle className="text-base font-bold text-slate-900 flex items-center gap-2">
+                  <LogOut className="w-5 h-5 text-rose-600" />
+                  Konfirmasi Keluar
+                </DialogTitle>
+                <DialogDescription className="text-xs text-slate-500 leading-relaxed">
+                  Apakah Anda sudah <strong>menyimpan data (Backup ke Cloud)</strong>?
+                  <br /><br />
+                  Melanjutkan keluar akan <span className="text-rose-600 font-bold">MENGHAPUS SEMUA DATA LOKAL</span> dari perangkat ini untuk mencegah konflik saat login menggunakan akun lain.
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="flex gap-2.5 pt-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setOpenLogout(false)}
+                  className="flex-1 text-xs h-10 rounded-xl border-slate-200 cursor-pointer"
+                >
+                  Batal
+                </Button>
+                <Button
+                  type="button"
+                  onClick={async () => {
+                    setOpenLogout(false);
+                    try {
+                      resetSchoolData();
+                      await logout();
+                    } catch (err) {
+                      console.error("Logout error", err);
+                    }
+                  }}
+                  className="flex-1 bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold h-10 rounded-xl flex items-center justify-center gap-1.5 active:scale-95 transition-transform cursor-pointer"
+                >
+                  Ya, Keluar & Hapus Data
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
         </div>
