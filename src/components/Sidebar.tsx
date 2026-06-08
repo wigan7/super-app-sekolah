@@ -54,7 +54,7 @@ const navItems = [
 export function Sidebar() {
   const pathname = usePathname();
   const { isOpen, toggleSidebar } = useSidebar();
-  const { user, headmasterData, logout } = useAuth();
+  const { user, logout } = useAuth();
   const [identitas, setIdentitas] = useState<{ namaKepalaSekolah?: string; namaSekolah?: string; fotoKepalaSekolah?: string }>({});
 
   useEffect(() => {
@@ -81,9 +81,9 @@ export function Sidebar() {
     return (cleanParts[0][0] + cleanParts[1][0]).toUpperCase();
   };
 
-  const namaKS = headmasterData?.nama || identitas.namaKepalaSekolah || "(Belum input Nama Kepala Sekolah)";
+  const namaKS = identitas.namaKepalaSekolah || "(Belum input Nama Kepala Sekolah)";
   const namaSekolah = identitas.namaSekolah || "(Belum input Nama Sekolah)";
-  const initials = getInitials(headmasterData?.nama || identitas.namaKepalaSekolah);
+  const initials = getInitials(identitas.namaKepalaSekolah);
 
   // Backup & Import States
   const [openBackup, setOpenBackup] = useState(false);

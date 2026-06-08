@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { getSchoolData } from "@/lib/clientDb";
-import { useAuth } from "@/providers/AuthProvider";
+
 import Image from "next/image";
 import { Printer, Loader2, Settings, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -178,7 +178,6 @@ const DataTable = ({ title, data, namaKS, nipKS, kabupaten, allowedKeys, printDa
 export default function CetakPage() {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const { headmasterData } = useAuth();
   
   const [paperSize, setPaperSize] = useState('A4');
   const [coverTitle, setCoverTitle] = useState('DOKUMEN ADMINISTRASI KEPALA SEKOLAH');
@@ -215,8 +214,8 @@ export default function CetakPage() {
   };
 
   const identitas = data.identitas || {};
-  const namaKS = headmasterData?.nama || identitas.namaKepalaSekolah || "";
-  const nipKS = headmasterData?.nip || identitas.nipKepalaSekolah || "";
+  const namaKS = identitas.namaKepalaSekolah || "";
+  const nipKS = identitas.nipKepalaSekolah || "";
 
   return (
     <div className="flex-1 overflow-y-auto bg-slate-100 relative print:bg-white print:overflow-visible">
