@@ -629,13 +629,13 @@ export function Sidebar() {
             </div>
           </Link>
           <Dialog open={openLogout} onOpenChange={setOpenLogout}>
-            <DialogTrigger asChild>
+            <DialogTrigger render={
               <button
                 title="Keluar"
                 className="shrink-0 w-9 h-9 flex items-center justify-center rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 border border-transparent hover:border-rose-100 transition-all active:scale-95 cursor-pointer"
-              >
-                <LogOut className="w-4 h-4" />
-              </button>
+              />
+            }>
+              <LogOut className="w-4 h-4" />
             </DialogTrigger>
             <DialogContent className="sm:max-w-md rounded-[32px] ios-glass border border-slate-200/60 p-6">
               <DialogHeader className="space-y-1.5">
